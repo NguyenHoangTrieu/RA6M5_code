@@ -1,40 +1,49 @@
-# This file was automatically generated and updated by RASC and should not be edited by the user.
-# Use CMakeLists.txt to override the settings in this file 
+# This file contains source files and target configuration for RA6M5
 
-#source directories
-file(GLOB_RECURSE Source_Files 
+include_guard()
+
+# Collect all source files
+file(GLOB_RECURSE RASC_SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-
-
-SET(ALL_FILES ${Source_Files})
-
-
-add_executable(${PROJECT_NAME}.elf
-	${ALL_FILES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
-target_compile_options(${PROJECT_NAME}.elf
-                       PRIVATE
-                       $<$<CONFIG:Debug>:${RASC_DEBUG_FLAGS}>
-                       $<$<CONFIG:Release>:${RASC_RELEASE_FLAGS}>
-                       $<$<CONFIG:MinSizeRel>:${RASC_MIN_SIZE_RELEASE_FLAGS}>
-                       $<$<CONFIG:RelWithDebInfo>:${RASC_RELEASE_WITH_DEBUG_INFO}>)
+# Collect assembly files if they exist
+file(GLOB RASC_ASM_SOURCE_FILES ${RASC_ASM_FILES})
 
-target_compile_options(${PROJECT_NAME}.elf PRIVATE  $<$<COMPILE_LANGUAGE:C>:${RASC_CMAKE_C_FLAGS}>)
-target_compile_options(${PROJECT_NAME}.elf PRIVATE  $<$<COMPILE_LANGUAGE:CXX>:${RASC_CMAKE_CXX_FLAGS}>)
+# Create executable target
+add_executable(${RASC_PROJECT_NAME}.elf
+    ${RASC_SOURCE_FILES}
+    ${RASC_ASM_SOURCE_FILES}
+)
 
-target_link_options(${PROJECT_NAME}.elf PRIVATE $<$<LINK_LANGUAGE:C>:${RASC_CMAKE_EXE_LINKER_FLAGS}>)
-target_link_options(${PROJECT_NAME}.elf PRIVATE $<$<LINK_LANGUAGE:CXX>:${RASC_CMAKE_EXE_LINKER_FLAGS}>)
+# Apply compiler flags per language
+target_compile_options(${RASC_PROJECT_NAME}.elf PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:${RASC_CMAKE_C_FLAGS}>
+    $<$<COMPILE_LANGUAGE:CXX>:${RASC_CMAKE_CXX_FLAGS}>
+    $<$<COMPILE_LANGUAGE:ASM>:${RASC_CMAKE_ASM_FLAGS}>
+)
 
-target_compile_definitions(${PROJECT_NAME}.elf PRIVATE ${RASC_CMAKE_DEFINITIONS})
+# Apply build configuration specific flags
+target_compile_options(${RASC_PROJECT_NAME}.elf PRIVATE
+    $<$<CONFIG:Debug>:${RASC_DEBUG_FLAGS}>
+    $<$<CONFIG:Release>:${RASC_RELEASE_FLAGS}>
+    $<$<CONFIG:MinSizeRel>:${RASC_MIN_SIZE_RELEASE_FLAGS}>
+    $<$<CONFIG:RelWithDebInfo>:${RASC_RELEASE_WITH_DEBUG_INFO}>
+)
 
-target_include_directories(${PROJECT_NAME}.elf
-    PRIVATE
+# Apply linker flags
+target_link_options(${RASC_PROJECT_NAME}.elf PRIVATE ${RASC_CMAKE_EXE_LINKER_FLAGS})
+
+# Apply preprocessor definitions
+target_compile_definitions(${RASC_PROJECT_NAME}.elf PRIVATE ${RASC_CMAKE_DEFINITIONS})
+
+# Include directories
+target_include_directories(${RASC_PROJECT_NAME}.elf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/arm/CMSIS_6/CMSIS/Core/Include
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/aws/FreeRTOS/FreeRTOS/Source/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/inc
@@ -47,83 +56,47 @@ target_include_directories(${PROJECT_NAME}.elf
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_directories(${PROJECT_NAME}.elf
-    PRIVATE
+# Link directories
+target_link_directories(${RASC_PROJECT_NAME}.elf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/script
 )
 
-target_link_libraries(${PROJECT_NAME}.elf
-    PRIVATE
+# Post-build step: Generate S-record file
+if(CMAKE_OBJCOPY)
+    add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O srec $<TARGET_FILE:${RASC_PROJECT_NAME}.elf> ${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.srec
+        COMMENT "Creating S-record file: ${RASC_PROJECT_NAME}.srec"
+        VERBATIM
+    )
     
-)
+    add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${RASC_PROJECT_NAME}.elf> ${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.hex
+        COMMENT "Creating Intel HEX file: ${RASC_PROJECT_NAME}.hex"
+        VERBATIM
+    )
+    
+    add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${RASC_PROJECT_NAME}.elf> ${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.bin
+        COMMENT "Creating binary file: ${RASC_PROJECT_NAME}.bin"
+        VERBATIM
+    )
+endif()
 
-add_custom_command(
-    TARGET
-        ${PROJECT_NAME}.elf
-    POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O srec ${PROJECT_NAME}.elf ${PROJECT_NAME}.srec
-    COMMENT "Creating S-record file in ${PROJECT_BINARY_DIR}"
-)
+# Print size information
+if(CMAKE_SIZE)
+    add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf POST_BUILD
+        COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${RASC_PROJECT_NAME}.elf>
+        COMMENT "Executable size information"
+        VERBATIM
+    )
+endif()
 
-
-# Pre-build step: run RASC to generate project content if configuration.xml is changed
-add_custom_command(
-    OUTPUT
-        configuration.xml.stamp
-    COMMAND
-        echo "Running RASC for generating project ${PROJECT_NAME} content since modification is detected in configuration.xml:"
-    COMMAND
-        echo ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-    COMMAND
-        ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml 2> rasc_cmd_log.txt
-    COMMAND
-        ${CMAKE_COMMAND} -E touch configuration.xml.stamp
-    COMMENT
-        "RASC pre-build to generate project content for ${PROJECT_NAME}"
-    DEPENDS
-        ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-)
-
-add_custom_target(generate_content_${PROJECT_NAME}
-  DEPENDS configuration.xml.stamp
-)
-
-add_dependencies(${PROJECT_NAME}.elf generate_content_${PROJECT_NAME})
-
-
-# Post-build step: run RASC to generate the SmartBundle file
-add_custom_command(
-	OUTPUT
-         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.sbd
-    COMMAND
-        echo "Running RASC post-build to generate Smart Bundle file for ${PROJECT_NAME}:"
-    COMMAND
-        echo ${RASC_EXE_PATH} -nosplash --launcher.suppressErrors --gensmartbundle --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION}  ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf 
-    COMMAND
-        ${RASC_EXE_PATH} -nosplash --launcher.suppressErrors --gensmartbundle --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION}  ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf  2> rasc_cmd_log.txt
-)
-
-add_custom_target(generate_sbd_${PROJECT_NAME} ALL
-	DEPENDS
-		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.sbd
-		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf
-	VERBATIM
-)
-
-add_dependencies(generate_sbd_${PROJECT_NAME} ${PROJECT_NAME}.elf)
-
-
-add_custom_command(
-    TARGET
-        ${PROJECT_NAME}.elf
-    POST_BUILD
-    COMMAND
-        echo ${RASC_EXE_PATH} -nosplash --launcher.suppressErrors --gensmartbundle --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION}  ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf 
-    COMMAND
-        ${RASC_EXE_PATH} -nosplash --launcher.suppressErrors --gensmartbundle --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION}  ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.elf  2> rasc_cmd_log.txt
-	VERBATIM
-)
+# Display build information
+message(STATUS "Source files found: ${RASC_SOURCE_FILES}")
+if(RASC_ASM_SOURCE_FILES)
+    message(STATUS "Assembly files found: ${RASC_ASM_SOURCE_FILES}")
+endif()
