@@ -36,7 +36,7 @@ target_compile_options(${RASC_PROJECT_NAME}.elf PRIVATE
     $<$<CONFIG:RelWithDebInfo>:${RASC_RELEASE_WITH_DEBUG_INFO}>
 )
 
-# Apply linker flags
+# Apply linker flags - QUAN TRỌNG: Đảm bảo dùng đúng linker
 target_link_options(${RASC_PROJECT_NAME}.elf PRIVATE ${RASC_CMAKE_EXE_LINKER_FLAGS})
 
 # Apply preprocessor definitions
@@ -45,6 +45,7 @@ target_compile_definitions(${RASC_PROJECT_NAME}.elf PRIVATE ${RASC_CMAKE_DEFINIT
 # Include directories
 target_include_directories(${RASC_PROJECT_NAME}.elf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/arm/CMSIS_6/CMSIS/Core/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/bsp/cmsis/Device/RENESAS/Source/startup.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/aws/FreeRTOS/FreeRTOS/Source/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/inc/api
@@ -65,7 +66,13 @@ target_link_directories(${RASC_PROJECT_NAME}.elf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/script
 )
 
-# Post-build step: Generate S-record file
+add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf PRE_BUILD
+    COMMAND ${CMAKE_C_COMPILER} -T${CMAKE_CURRENT_SOURCE_DIR}/script/fsp.ld -Wl,--verbose -nostdlib
+    COMMENT "Checking linker script syntax"
+    VERBATIM
+)
+
+# Post-build steps
 if(CMAKE_OBJCOPY)
     add_custom_command(TARGET ${RASC_PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O srec $<TARGET_FILE:${RASC_PROJECT_NAME}.elf> ${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.srec
@@ -96,7 +103,9 @@ if(CMAKE_SIZE)
 endif()
 
 # Display build information
-message(STATUS "Source files found: ${RASC_SOURCE_FILES}")
+list(LENGTH RASC_SOURCE_FILES SOURCE_COUNT)
+message(STATUS "Found ${SOURCE_COUNT} source files")
 if(RASC_ASM_SOURCE_FILES)
-    message(STATUS "Assembly files found: ${RASC_ASM_SOURCE_FILES}")
+    list(LENGTH RASC_ASM_SOURCE_FILES ASM_COUNT)
+    message(STATUS "Found ${ASM_COUNT} assembly files")
 endif()

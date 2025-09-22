@@ -23,7 +23,7 @@ set(RASC_BASE_FLAGS
 # Warning flags
 set(RASC_WARNING_FLAGS
     "-Wall"
-    "-Wextra"
+    "-Wextra" 
     "-Wunused"
     "-Wuninitialized"
     "-Wmissing-declarations"
@@ -41,30 +41,33 @@ set(RASC_DEP_FLAGS "-MMD" "-MP")
 # C compiler flags
 set(RASC_CMAKE_C_FLAGS ${RASC_BASE_FLAGS} ${RASC_WARNING_FLAGS} ${RASC_DEP_FLAGS} "-std=c99")
 
-# C++ compiler flags
+# C++ compiler flags  
 set(RASC_CMAKE_CXX_FLAGS ${RASC_BASE_FLAGS} ${RASC_WARNING_FLAGS} ${RASC_DEP_FLAGS} "-std=c++11")
 
 # Assembly flags
 set(RASC_CMAKE_ASM_FLAGS ${RASC_BASE_FLAGS} ${RASC_WARNING_FLAGS} ${RASC_DEP_FLAGS} "-x" "assembler-with-cpp")
 
-# Linker flags
 set(RASC_CMAKE_EXE_LINKER_FLAGS
     ${RASC_BASE_FLAGS}
-    ${RASC_WARNING_FLAGS}
     "-T${CMAKE_CURRENT_SOURCE_DIR}/script/fsp.ld"
+    "-L${CMAKE_CURRENT_SOURCE_DIR}/script"
     "-Wl,--gc-sections"
-    "-Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.map"
+    "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${RASC_PROJECT_NAME}.map"
     "--specs=nano.specs"
+    "-Wl,--start-group"
+    "-lc" 
+    "-lm"
+    "-Wl,--end-group"
 )
 
 # Preprocessor definitions
 set(RASC_CMAKE_DEFINITIONS
     "_RA_CORE=CM33"
-    "_RA_ORDINAL=1"
+    "_RA_ORDINAL=1" 
     "_RENESAS_RA_"
 )
 
-# GCC version specific flags for GCC >= 12.2
+# GCC version specific flags
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.2)
     list(PREPEND RASC_CMAKE_C_FLAGS
         "--param=min-pagesize=0"
@@ -73,14 +76,14 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREAT
     )
     list(PREPEND RASC_CMAKE_CXX_FLAGS
         "--param=min-pagesize=0"
-        "-Wno-format-truncation"
+        "-Wno-format-truncation" 
         "-Wno-stringop-overflow"
     )
 endif()
 
-# Build configuration specific optimization flags
+# Build configuration flags
 set(RASC_DEBUG_FLAGS "-g" "-O0")
-set(RASC_RELEASE_FLAGS "-O2" "-DNDEBUG")
+set(RASC_RELEASE_FLAGS "-O2" "-DNDEBUG")  
 set(RASC_MIN_SIZE_RELEASE_FLAGS "-Os" "-DNDEBUG")
 set(RASC_RELEASE_WITH_DEBUG_INFO "-g" "-O2" "-DNDEBUG")
 
