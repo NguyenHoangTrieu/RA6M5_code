@@ -1,384 +1,459 @@
 #include "udp_task.h"
-#include "ethernet_init.h"
+#include "hal_data.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-// Task configuration
-#define UDP_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
-#define UDP_TASK_STACK_SIZE (3072)
-
-// Static variables for sensor data transmission
+// Static variables
+static udp_state_t udp_state = {0};
+static packet_fifo_t sensor_fifo = {0};
+static task_control_t task_control = {0};
 static TaskHandle_t udp_task_handle = NULL;
-static Socket_t udp_socket = FREERTOS_INVALID_SOCKET;
-static struct freertos_sockaddr udp_server_addr;
-static uint8_t udp_task_should_run = 1;
 
-// Pause/resume control
-typedef struct {
-    uint8_t is_paused;
-    SemaphoreHandle_t mutex;
-    SemaphoreHandle_t resume_sem;
-} thread_pause_t;
-
-static thread_pause_t udp_pause = {0};
+// Mock sensor data for demonstration (replace with actual sensor drivers)
+static float mock_zmod4410_tvoc = 220.0;    // ppb
+static uint16_t mock_zmod4410_iaq = 95;      // IAQ index
+static float mock_icp10101_pressure = 101650.0; // Pa
+static float mock_icp10101_temp = 23.5;     // °C
+static float mock_icp10101_altitude = 120.0; // m
 
 // Forward declarations
-static void sensor_data_transmission_task(void *pvParameters);
+static void udp_event_handler(struct mg_connection *c, int ev, void *ev_data);
+static bool udp_connect(void);
+static void udp_disconnect(void);
+static bool send_buffered_packets(void);
+static void process_sensor_readings(void);
+static void mg_random_impl(void *buf, size_t len);
 
-// Initialize UDP configuration with hardcoded values
-static void init_udp_config(udp_config_t *config)
-{
-    if (!config) return;
-    
-    // Server connection settings
-    strcpy(config->server_host, "192.168.1.11");
-    config->server_port = 8765;
-    config->local_port = 0; // Any available port
-    strcpy(config->client_id, "ck-ra6m5-01");
-    strcpy(config->protocol_version, "1.0");
-    strcpy(config->data_format, "json");
-    
-    // Timing settings
-    config->send_interval = 5;
-    config->socket_timeout = 5000;
-    config->retry_delay_ms = 1000;
-    config->loop_interval_ms = 100;
-    config->payload_buffer_size = 1024;
-    
-    // Socket options
-    config->socket_options.broadcast_enabled = 0;
-    config->socket_options.reuse_addr = 1;
-    config->socket_options.send_buffer_size = 2048;
-    config->socket_options.recv_buffer_size = 1024;
-    config->socket_options.send_timeout_ms = 5000;
-    
-    // System fields
-    strcpy(config->system_fields.data_source, "ck-ra6m5-01");
-    config->system_fields.include_timestamp = 1;
-    config->system_fields.include_gateway_ip = 1;
-    config->system_fields.include_node_count = 1;
-    config->system_fields.include_system_info = 1;
-    
-    // Protocol settings
-    strcpy(config->protocol_settings.message_delimiter, "\n");
-    config->protocol_settings.max_message_size = 1024;
-    config->protocol_settings.compression_enabled = 0;
-    config->protocol_settings.encryption_enabled = 0;
-    
-    // Features
-    config->features.telemetry_upload = 1;
-    config->features.status_reporting = 1;
-    
-    printf("UDP config initialized\n");
+// Custom random function required by Mongoose
+void mg_random(void *buf, size_t len) {
+    mg_random_impl(buf, len);
 }
 
-// Get UDP configuration (singleton pattern)
-const udp_config_t* get_udp_config(void)
-{
-    static udp_config_t udp_config;
-    static uint8_t initialized = 0;
-    
-    if (!initialized) {
-        init_udp_config(&udp_config);
-        initialized = 1;
+static void mg_random_impl(void *buf, size_t len) {
+    uint8_t *p = (uint8_t*)buf;
+    for (size_t i = 0; i < len; i++) {
+        p[i] = (uint8_t)(xTaskGetTickCount() + i);
     }
-    
-    return &udp_config;
 }
 
-// Get CK-RA6M5 system information
-const system_info_t* get_system_info(void)
-{
-    static system_info_t sys_info;
-    static uint8_t initialized = 0;
-    
-    if (!initialized) {
-        strcpy(sys_info.firmware_version, "1.0.0");
-        strcpy(sys_info.device_type, "CK-RA6M5 IoT Gateway");
-        strcpy(sys_info.manufacturer, "Renesas");
-        strcpy(sys_info.model, "CK-RA6M5");
-        initialized = 1;
-    }
-    
-    return &sys_info;
-}
-
-// Get number of connected sensors
-int get_node_count(void) { return 2; }
-
-// Get device IP address
-char *udp_get_local_ip(void)
-{
-    static char ip_str[16];
-    uint32_t ip = ethernet_get_ip_address();
-    
-    sprintf(ip_str, "%d.%d.%d.%d", 
-           (int)(ip & 0xFF),
-           (int)((ip >> 8) & 0xFF),
-           (int)((ip >> 16) & 0xFF),
-           (int)((ip >> 24) & 0xFF));
-    
-    return ip_str;
-}
-
-// Initialize UDP socket
-static int udp_init(void)
-{
-    const udp_config_t *config = get_udp_config();
-    if (!config || !strlen(config->server_host) || !config->server_port) {
-        printf("ERROR: Invalid UDP configuration\n");
-        return -1;
-    }
-    
-    // Create UDP socket
-    udp_socket = FreeRTOS_socket(FREERTOS_AF_INET, FREERTOS_SOCK_DGRAM, FREERTOS_IPPROTO_UDP);
-    if (udp_socket == FREERTOS_INVALID_SOCKET) {
-        printf("ERROR: Failed to create UDP socket\n");
-        return -1;
-    }
-    
-    // Configure socket options
-    TickType_t send_timeout = pdMS_TO_TICKS(config->socket_options.send_timeout_ms);
-    FreeRTOS_setsockopt(udp_socket, 0, FREERTOS_SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
-    
-    // Setup server address
-    memset(&udp_server_addr, 0, sizeof(udp_server_addr));
-    udp_server_addr.sin_family = FREERTOS_AF_INET;
-    udp_server_addr.sin_port = FreeRTOS_htons(config->server_port);
-    udp_server_addr.sin_addr = FreeRTOS_inet_addr(config->server_host);
-    
-    printf("UDP initialized: %s:%d\n", config->server_host, config->server_port);
-    return 0;
-}
-
-// Send sensor data packet to server
-static int udp_send_sensor_data(const char *data, size_t len)
-{
-    if (!data || len == 0 || udp_socket == FREERTOS_INVALID_SOCKET) {
-        return -1;
-    }
-    
-    const udp_config_t *config = get_udp_config();
-    if (!config || len > config->protocol_settings.max_message_size) {
-        return -1;
-    }
-    
-    // Append delimiter
-    size_t delimiter_len = strlen(config->protocol_settings.message_delimiter);
-    size_t total_len = len + delimiter_len;
-    
-    char *send_buffer = pvPortMalloc(total_len);
-    if (!send_buffer) return -1;
-    
-    memcpy(send_buffer, data, len);
-    memcpy(send_buffer + len, config->protocol_settings.message_delimiter, delimiter_len);
-    
-    // Send UDP packet
-    int32_t sent = FreeRTOS_sendto(udp_socket, send_buffer, total_len, 0, 
-                                   &udp_server_addr, sizeof(udp_server_addr));
-    
-    vPortFree(send_buffer);
-    
-    if (sent != (int32_t)total_len) {
-        printf("UDP send failed: %d/%zu bytes\n", sent, total_len);
-        return -1;
-    }
-    
-    return 0;
-}
-
-// Build sensor data packet for transmission
-static void build_sensor_data_packet(char *payload, size_t payload_size, TickType_t timestamp)
-{
-    if (!payload || payload_size == 0) return;
-    
-    const udp_config_t *config = get_udp_config();
-    if (!config) {
-        payload[0] = '\0';
+// Initialize UDP task and resources
+void udp_task_init(void) {
+    // Initialize FIFO mutex
+    sensor_fifo.mutex = xSemaphoreCreateMutex();
+    if (sensor_fifo.mutex == NULL) {
+#ifdef DEBUG
+        debug_printf("Failed to create FIFO mutex\n");
+#endif
         return;
     }
-    
-    // Build JSON sensor data packet
-    snprintf(payload, payload_size,
-             "{\"timestamp\":%lu,\"dev\":\"%s\",\"sensor\":\"ZMOD4510\","
-             "\"o3\":45,\"no2\":12,\"aqi\":85,\"status\":\"active\"}",
-             timestamp, config->client_id);
-}
 
-// Main sensor data transmission task
-static void sensor_data_transmission_task(void *pvParameters)
-{
-    const udp_config_t *config = get_udp_config();
-    if (!config) {
-        printf("UDP Task: No config, exiting\n");
-        vTaskDelete(NULL);
-        return;
-    }
-    
-    // Wait for network to be ready
-    while (FreeRTOS_GetIPAddress() == 0) {
-        printf("Waiting for IP address...\n");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-    
-    printf("Network ready, IP: %s\n", udp_get_local_ip());
-    
-    // Initialize UDP
-    if (udp_init() != 0) {
-        printf("UDP Task: Init failed, exiting\n");
-        vTaskDelete(NULL);
-        return;
-    }
-    
-    // Allocate sensor data buffer
-    char *sensor_data_buffer = pvPortMalloc(config->payload_buffer_size);
-    if (!sensor_data_buffer) {
-        printf("UDP Task: Buffer allocation failed\n");
-        vTaskDelete(NULL);
-        return;
-    }
-    
-    printf("UDP Task: Started, buffer size: %d\n", config->payload_buffer_size);
-    
-    TickType_t last_sensor_reading = 0;
-    
-    // Send initial device info
-    const system_info_t *sys_info = get_system_info();
-    char device_info[256];
-    snprintf(device_info, sizeof(device_info),
-             "{\"type\":\"device_info\",\"dev\":\"%s\",\"firmware\":\"%s\","
-             "\"sensors\":[\"ZMOD4510\",\"ICP-10101\"],\"ip\":\"%s\"}",
-             config->client_id, sys_info->firmware_version, udp_get_local_ip());
-    
-    udp_send_sensor_data(device_info, strlen(device_info));
-    
-    // Main transmission loop
-    while (udp_task_should_run) {
-        // Handle pause/resume
-        if (udp_pause.mutex && xSemaphoreTake(udp_pause.mutex, 0) == pdTRUE) {
-            if (udp_pause.is_paused) {
-                xSemaphoreGive(udp_pause.mutex);
-                xSemaphoreTake(udp_pause.resume_sem, portMAX_DELAY);
-            } else {
-                xSemaphoreGive(udp_pause.mutex);
-            }
-        }
-        
-        TickType_t current_time = xTaskGetTickCount();
-        
-        // Send sensor data at configured interval
-        if ((current_time - last_sensor_reading) >= pdMS_TO_TICKS(config->send_interval * 1000)) {
-            build_sensor_data_packet(sensor_data_buffer, config->payload_buffer_size, current_time);
-            
-            if (udp_send_sensor_data(sensor_data_buffer, strlen(sensor_data_buffer)) == 0) {
-                printf("Sensor data sent: %s\n", sensor_data_buffer);
-                last_sensor_reading = current_time;
-            } else {
-                printf("Failed to send sensor data\n");
-            }
-        }
-        
-        vTaskDelay(pdMS_TO_TICKS(config->loop_interval_ms));
-    }
-    
-    // Cleanup
-    if (udp_socket != FREERTOS_INVALID_SOCKET) {
-        FreeRTOS_closesocket(udp_socket);
-        udp_socket = FREERTOS_INVALID_SOCKET;
-    }
-    
-    vPortFree(sensor_data_buffer);
-    printf("UDP Task: Exiting\n");
-    vTaskDelete(NULL);
-}
+    // Initialize task control
+    task_control.pause_mutex = xSemaphoreCreateMutex();
+    task_control.resume_sem = xSemaphoreCreateBinary();
+    task_control.is_paused = false;
 
-// Initialize sensor data transmission system
-int udp_client_init(void)
-{
-    // Initialize Ethernet first
-    if (ethernet_init() != 0) {
-        printf("ERROR: Ethernet initialization failed\n");
-        return pdFAIL;
+    if (task_control.pause_mutex == NULL || task_control.resume_sem == NULL) {
+#ifdef DEBUG
+        debug_printf("Failed to create task control semaphores\n");
+#endif
+        return;
     }
-    
-    if (ethernet_start() != 0) {
-        printf("ERROR: Ethernet start failed\n");
-        return pdFAIL;
-    }
-    
-    // Create synchronization objects
-    udp_pause.mutex = xSemaphoreCreateMutex();
-    if (!udp_pause.mutex) return pdFAIL;
-    
-    udp_pause.resume_sem = xSemaphoreCreateBinary();
-    if (!udp_pause.resume_sem) {
-        vSemaphoreDelete(udp_pause.mutex);
-        return pdFAIL;
-    }
-    
-    // Create sensor data transmission task
-    BaseType_t result = xTaskCreate(sensor_data_transmission_task, "SensorDataUDP",
-                                   UDP_TASK_STACK_SIZE, NULL, UDP_TASK_PRIORITY, &udp_task_handle);
-    
+
+    // Initialize Mongoose manager
+    mg_mgr_init(&udp_state.mgr);
+    udp_state.connected = false;
+    udp_state.reconnecting = false;
+    udp_state.last_send_time = 0;
+    udp_state.packet_sequence = 0;
+
+    // Create UDP task
+    BaseType_t result = xTaskCreate(
+        udp_task_run,
+        "UDP_Task",
+        UDP_TASK_STACK_SIZE,
+        NULL,
+        UDP_TASK_PRIORITY,
+        &udp_task_handle
+    );
+
     if (result != pdPASS) {
-        vSemaphoreDelete(udp_pause.mutex);
-        vSemaphoreDelete(udp_pause.resume_sem);
-        printf("UDP: Task creation failed\n");
-        return pdFAIL;
+#ifdef DEBUG
+        debug_printf("Failed to create UDP task\n");
+#endif
+    } else {
+#ifdef DEBUG
+        debug_printf("UDP task initialized successfully\n");
+#endif
     }
+}
+
+// Main UDP task implementation
+void udp_task_run(void *pvParameters) {
+    (void)pvParameters;
     
-    printf("UDP: Client initialized successfully\n");
-    return pdPASS;
-}
+    TickType_t last_sensor_read = 0;
+    TickType_t current_time;
 
-// Pause sensor data transmission
-void udp_client_pause(void)
-{
-    if (udp_pause.mutex && xSemaphoreTake(udp_pause.mutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-        udp_pause.is_paused = 1;
-        xSemaphoreGive(udp_pause.mutex);
-        printf("UDP: Client paused\n");
+#ifdef DEBUG
+    debug_printf("UDP task started\n");
+#endif
+
+    // Initial connection attempt
+    if (!udp_connect()) {
+#ifdef DEBUG
+        debug_printf("Initial connection failed\n");
+#endif
     }
-}
 
-// Resume sensor data transmission
-void udp_client_resume(void)
-{
-    if (udp_pause.mutex && xSemaphoreTake(udp_pause.mutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-        udp_pause.is_paused = 0;
-        xSemaphoreGive(udp_pause.mutex);
-        
-        if (udp_pause.resume_sem) {
-            xSemaphoreGive(udp_pause.resume_sem);
+    while (1) {
+        // Handle pause/resume
+        if (xSemaphoreTake(task_control.pause_mutex, 0) == pdTRUE) {
+            if (task_control.is_paused) {
+                xSemaphoreGive(task_control.pause_mutex);
+#ifdef DEBUG
+                debug_printf("Task paused\n");
+#endif
+                xSemaphoreTake(task_control.resume_sem, portMAX_DELAY);
+                continue;
+            }
+            xSemaphoreGive(task_control.pause_mutex);
         }
-        
-        printf("UDP: Client resumed\n");
+
+        current_time = xTaskGetTickCount();
+
+        // Poll Mongoose events
+        mg_mgr_poll(&udp_state.mgr, 50);
+
+        // Try to reconnect if disconnected
+        if (!udp_state.connected && !udp_state.reconnecting) {
+            if (current_time - udp_state.last_send_time > pdMS_TO_TICKS(RECONNECT_DELAY_MS)) {
+#ifdef DEBUG
+                debug_printf("Attempting reconnection...\n");
+#endif
+                udp_connect();
+            }
+        }
+
+        // Read sensors periodically
+        if (current_time - last_sensor_read >= pdMS_TO_TICKS(SENSOR_READ_INTERVAL_MS)) {
+            process_sensor_readings();
+            last_sensor_read = current_time;
+        }
+
+        // Send buffered packets if connected
+        if (udp_state.connected) {
+            if (current_time - udp_state.last_send_time >= pdMS_TO_TICKS(UDP_SEND_INTERVAL_MS)) {
+                send_buffered_packets();
+                udp_state.last_send_time = current_time;
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(TASK_LOOP_DELAY_MS));
     }
 }
 
-// Cleanup sensor data transmission system
-void udp_client_deinit(void)
-{
-    udp_task_should_run = 0;
+// Connect to UDP server
+static bool udp_connect(void) {
+    if (udp_state.connection != NULL) {
+        mg_mgr_poll(&udp_state.mgr, 0);
+        udp_state.connection = NULL;
+    }
+
+    udp_state.reconnecting = true;
+    udp_state.connection = mg_connect(&udp_state.mgr, UDP_BIND_URL, udp_event_handler, NULL);
+
+#ifdef DEBUG
+    debug_printf("Connecting to %s\n", UDP_BIND_URL);
+#endif
+
+    return udp_state.connection != NULL;
+}
+
+// Disconnect from UDP server
+static void udp_disconnect(void) {
+    udp_state.connected = false;
+    if (udp_state.connection != NULL) {
+        mg_mgr_poll(&udp_state.mgr, 0);
+        udp_state.connection = NULL;
+    }
+#ifdef DEBUG
+    debug_printf("Disconnected from server\n");
+#endif
+}
+
+// UDP event handler
+static void udp_event_handler(struct mg_connection *c, int ev, void *ev_data) {
+    switch (ev) {
+        case MG_EV_CONNECT:
+            udp_state.connected = true;
+            udp_state.reconnecting = false;
+            udp_state.connection = c;
+#ifdef DEBUG
+            debug_printf("Connected to server\n");
+#endif
+            break;
+
+        case MG_EV_READ:
+            if (c->recv.len > 0) {
+                // Process server responses (optional)
+#ifdef DEBUG
+                debug_printf("Received %d bytes from server\n", (int)c->recv.len);
+#endif
+                mg_iobuf_del(&c->recv, 0, c->recv.len);
+            }
+            break;
+
+        case MG_EV_CLOSE:
+        case MG_EV_ERROR:
+            udp_state.connected = false;
+            udp_state.reconnecting = false;
+            udp_state.connection = NULL;
+#ifdef DEBUG
+            debug_printf("Connection %s\n", ev == MG_EV_CLOSE ? "closed" : "error");
+#endif
+            break;
+    }
+}
+
+// Read sensor data (mock implementation - replace with actual sensor drivers)
+bool read_sensor_data(int sensor_id, sensor_packet_t *packet) {
+    if (!packet) return false;
+
+    // Get current timestamp
+    get_utc_timestamp(packet->timestamp, sizeof(packet->timestamp));
+    packet->sequence = udp_state.packet_sequence++;
+
+    switch (sensor_id) {
+        case SENSOR_ZMOD4410:
+            strcpy(packet->sensor_name, "zmod4410");
+            // Simulate sensor readings with slight variations
+            mock_zmod4410_tvoc += (float)(rand() % 20 - 10);
+            mock_zmod4410_iaq += (rand() % 10 - 5);
+            snprintf(packet->value_str, sizeof(packet->value_str), 
+                    "tvoc=%.0fppb iaq=%d", mock_zmod4410_tvoc, mock_zmod4410_iaq);
+            break;
+
+        case SENSOR_ICP10101:
+            strcpy(packet->sensor_name, "icp10101");
+            // Simulate sensor readings with slight variations  
+            mock_icp10101_pressure += (float)(rand() % 100 - 50);
+            mock_icp10101_temp += (float)(rand() % 4 - 2) * 0.1f;
+            mock_icp10101_altitude += (float)(rand() % 10 - 5) * 0.1f;
+            snprintf(packet->value_str, sizeof(packet->value_str),
+                    "pressure=%.0fPa temp=%.1fC alt=%.1fm", 
+                    mock_icp10101_pressure, mock_icp10101_temp, mock_icp10101_altitude);
+            break;
+
+        default:
+            return false;
+    }
+
+    return true;
+}
+
+// Process sensor readings and buffer them
+static void process_sensor_readings(void) {
+    sensor_packet_t packet;
+
+    // Read data from selected sensors
+    int sensors[] = {SELECTED_SENSOR_1, SELECTED_SENSOR_2};
     
-    if (udp_task_handle) {
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (read_sensor_data(sensors[i], &packet)) {
+            if (!fifo_push(&sensor_fifo, &packet)) {
+#ifdef DEBUG
+                debug_printf("FIFO full, dropping packet from sensor %d\n", sensors[i]);
+#endif
+            } else {
+#ifdef DEBUG
+                debug_printf("Buffered packet from %s: %s\n", 
+                           packet.sensor_name, packet.value_str);
+#endif
+            }
+        }
+    }
+}
+
+// Send buffered packets to server
+static bool send_buffered_packets(void) {
+    sensor_packet_t packet;
+    char message_buffer[PACKET_MAX_SIZE];
+    bool sent_any = false;
+
+    while (!fifo_is_empty(&sensor_fifo) && udp_state.connected) {
+        if (fifo_pop(&sensor_fifo, &packet)) {
+            format_sensor_message(&packet, message_buffer, sizeof(message_buffer));
+            
+            size_t msg_len = strlen(message_buffer);
+            if (mg_send(udp_state.connection, message_buffer, msg_len) > 0) {
+#ifdef DEBUG
+                debug_printf("Sent: %s", message_buffer);
+#endif
+                sent_any = true;
+            } else {
+                // Put packet back if send failed
+                if (!fifo_push(&sensor_fifo, &packet)) {
+#ifdef DEBUG
+                    debug_printf("Failed to put packet back in FIFO\n");
+#endif
+                }
+                break;
+            }
+        }
+    }
+
+    return sent_any;
+}
+
+// Format sensor message in key=value format
+void format_sensor_message(const sensor_packet_t *packet, char *buffer, size_t buffer_size) {
+    if (!packet || !buffer) return;
+
+#if USE_KEY_VALUE_FORMAT
+    snprintf(buffer, buffer_size, 
+            "dev=%s sensor=%s %s timestamp=%s seq=%lu%s",
+            DEVICE_NAME,
+            packet->sensor_name,
+            packet->value_str,
+            packet->timestamp,
+            (unsigned long)packet->sequence,
+            MESSAGE_DELIMITER);
+#else
+    // JSON format alternative
+    snprintf(buffer, buffer_size,
+            "{\"dev\":\"%s\",\"sensor\":\"%s\",\"data\":\"%s\",\"timestamp\":\"%s\",\"seq\":%lu}%s",
+            DEVICE_NAME,
+            packet->sensor_name, 
+            packet->value_str,
+            packet->timestamp,
+            (unsigned long)packet->sequence,
+            MESSAGE_DELIMITER);
+#endif
+}
+
+// Get UTC timestamp string
+void get_utc_timestamp(char *buffer, size_t buffer_size) {
+    if (!buffer) return;
+    
+    // Get current tick count and convert to seconds since boot
+    TickType_t ticks = xTaskGetTickCount();
+    uint32_t seconds = ticks / configTICK_RATE_HZ;
+    
+    // For demonstration, create a mock UTC timestamp
+    // In real implementation, use RTC or NTP to get actual UTC time
+    uint32_t hour = (seconds / 3600) % 24;
+    uint32_t minute = (seconds / 60) % 60;
+    uint32_t sec = seconds % 60;
+    
+    // Mock date - replace with actual date from RTC
+    snprintf(buffer, buffer_size, "%02lu-%02lu-%02lu-24-09-2025", 
+            (unsigned long)hour, (unsigned long)minute, (unsigned long)sec);
+}
+
+// FIFO operations implementation
+bool fifo_push(packet_fifo_t *fifo, const sensor_packet_t *packet) {
+    if (!fifo || !packet || !fifo->mutex) return false;
+
+    if (xSemaphoreTake(fifo->mutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+        return false;
+    }
+
+    bool success = false;
+    if (fifo->count < SENSOR_BUFFER_SIZE) {
+        fifo->buffer[fifo->head] = *packet;
+        fifo->head = (fifo->head + 1) % SENSOR_BUFFER_SIZE;
+        fifo->count++;
+        success = true;
+    }
+
+    xSemaphoreGive(fifo->mutex);
+    return success;
+}
+
+bool fifo_pop(packet_fifo_t *fifo, sensor_packet_t *packet) {
+    if (!fifo || !packet || !fifo->mutex) return false;
+
+    if (xSemaphoreTake(fifo->mutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+        return false;
+    }
+
+    bool success = false;
+    if (fifo->count > 0) {
+        *packet = fifo->buffer[fifo->tail];
+        fifo->tail = (fifo->tail + 1) % SENSOR_BUFFER_SIZE;
+        fifo->count--;
+        success = true;
+    }
+
+    xSemaphoreGive(fifo->mutex);
+    return success;
+}
+
+bool fifo_is_empty(packet_fifo_t *fifo) {
+    if (!fifo || !fifo->mutex) return true;
+
+    bool empty = true;
+    if (xSemaphoreTake(fifo->mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        empty = (fifo->count == 0);
+        xSemaphoreGive(fifo->mutex);
+    }
+    return empty;
+}
+
+bool fifo_is_full(packet_fifo_t *fifo) {
+    if (!fifo || !fifo->mutex) return true;
+
+    bool full = true;
+    if (xSemaphoreTake(fifo->mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        full = (fifo->count >= SENSOR_BUFFER_SIZE);
+        xSemaphoreGive(fifo->mutex);
+    }
+    return full;
+}
+
+void fifo_clear(packet_fifo_t *fifo) {
+    if (!fifo || !fifo->mutex) return;
+
+    if (xSemaphoreTake(fifo->mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        fifo->head = 0;
+        fifo->tail = 0;
+        fifo->count = 0;
+        xSemaphoreGive(fifo->mutex);
+    }
+}
+
+// Task control functions
+void udp_task_pause(bool pause) {
+    if (xSemaphoreTake(task_control.pause_mutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        task_control.is_paused = pause;
+        if (!pause) {
+            xSemaphoreGive(task_control.resume_sem);
+        }
+        xSemaphoreGive(task_control.pause_mutex);
+    }
+}
+
+void udp_task_stop(void) {
+    if (udp_task_handle != NULL) {
         vTaskDelete(udp_task_handle);
         udp_task_handle = NULL;
     }
     
-    if (udp_socket != FREERTOS_INVALID_SOCKET) {
-        FreeRTOS_closesocket(udp_socket);
-        udp_socket = FREERTOS_INVALID_SOCKET;
-    }
+    udp_disconnect();
+    mg_mgr_free(&udp_state.mgr);
     
-    if (udp_pause.mutex) {
-        vSemaphoreDelete(udp_pause.mutex);
-        udp_pause.mutex = NULL;
+    if (sensor_fifo.mutex != NULL) {
+        vSemaphoreDelete(sensor_fifo.mutex);
     }
-    
-    if (udp_pause.resume_sem) {
-        vSemaphoreDelete(udp_pause.resume_sem);
-        udp_pause.resume_sem = NULL;
+    if (task_control.pause_mutex != NULL) {
+        vSemaphoreDelete(task_control.pause_mutex);
     }
-    
-    ethernet_stop();
-    printf("UDP: Client deinitialized\n");
+    if (task_control.resume_sem != NULL) {
+        vSemaphoreDelete(task_control.resume_sem);
+    }
+
+#ifdef DEBUG
+    debug_printf("UDP task stopped and resources cleaned up\n");
+#endif
 }
