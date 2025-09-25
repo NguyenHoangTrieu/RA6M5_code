@@ -722,6 +722,10 @@ FSP Configuration
   Module "I2C Shared Bus (rm_comms_i2c)"
     Parameter Checking: Default (BSP)
     
+  Module "Realtime Clock (r_rtc)"
+    Parameter Checking: Default (BSP)
+    Set Source Clock in Open: Enabled
+    
   FreeRTOS
     General: Custom FreeRTOSConfig.h: 
     General: Use Preemption: Enabled
@@ -856,6 +860,19 @@ FSP Configuration
           PHY-LSI Address: 0
           PHY-LSI type: Kit Component
           
+    Instance "g_rtc0 Realtime Clock (r_rtc)"
+      Name: g_rtc0
+      Clock Source: LOCO
+      Frequency Comparison Value (LOCO): 255
+      Automatic Adjustment Mode: Enabled
+      Automatic Adjustment Period: 10 Seconds
+      Adjustment Type (Plus-Minus): NONE
+      Error Adjustment Value: 0
+      Callback: NULL
+      Alarm Interrupt Priority: Disabled
+      Period Interrupt Priority: Disabled
+      Carry Interrupt Priority: Priority 12
+      
   Thread "Sensor Thread"
     Symbol: sensor_thread
     Name: Sensor Thread

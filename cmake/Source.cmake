@@ -31,6 +31,7 @@ set(SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_iic_master/r_iic_master.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/rm_comms_i2c/rm_comms_i2c.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/rm_comms_i2c/rm_comms_i2c_driver_ra.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_rtc/r_rtc.c
     
     
     # FreeRTOS source files

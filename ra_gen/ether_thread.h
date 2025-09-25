@@ -11,11 +11,23 @@
                 #else
                 extern void ether_thread_entry(void * pvParameters);
                 #endif
+#include "r_rtc.h"
+#include "r_rtc_api.h"
 #include "r_ether_phy.h"
 #include "r_ether_phy_api.h"
 #include "r_ether.h"
 #include "r_ether_api.h"
 FSP_HEADER
+/* RTC Instance. */
+extern const rtc_instance_t g_rtc0;
+
+/** Access the RTC instance using these structures when calling API functions directly (::p_api is not used). */
+extern rtc_instance_ctrl_t g_rtc0_ctrl;
+extern const rtc_cfg_t g_rtc0_cfg;
+
+#ifndef NULL
+void NULL(rtc_callback_args_t * p_args);
+#endif
 #ifndef ETHER_PHY_LSI_TYPE_KIT_COMPONENT
   #define ETHER_PHY_LSI_TYPE_KIT_COMPONENT ETHER_PHY_LSI_TYPE_DEFAULT
 #endif

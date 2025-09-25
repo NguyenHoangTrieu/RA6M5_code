@@ -6,10 +6,11 @@
         #endif
                 /* Number of interrupts allocated */
         #ifndef VECTOR_DATA_IRQ_COUNT
-        #define VECTOR_DATA_IRQ_COUNT    (5)
+        #define VECTOR_DATA_IRQ_COUNT    (6)
         #endif
         /* ISR prototypes */
         void ether_eint_isr(void);
+        void rtc_carry_isr(void);
         void iic_master_rxi_isr(void);
         void iic_master_txi_isr(void);
         void iic_master_tei_isr(void);
@@ -18,16 +19,18 @@
         /* Vector table allocations */
         #define VECTOR_NUMBER_EDMAC0_EINT ((IRQn_Type) 0) /* EDMAC0 EINT (EDMAC 0 interrupt) */
         #define EDMAC0_EINT_IRQn          ((IRQn_Type) 0) /* EDMAC0 EINT (EDMAC 0 interrupt) */
-        #define VECTOR_NUMBER_IIC0_RXI ((IRQn_Type) 1) /* IIC0 RXI (Receive data full) */
-        #define IIC0_RXI_IRQn          ((IRQn_Type) 1) /* IIC0 RXI (Receive data full) */
-        #define VECTOR_NUMBER_IIC0_TXI ((IRQn_Type) 2) /* IIC0 TXI (Transmit data empty) */
-        #define IIC0_TXI_IRQn          ((IRQn_Type) 2) /* IIC0 TXI (Transmit data empty) */
-        #define VECTOR_NUMBER_IIC0_TEI ((IRQn_Type) 3) /* IIC0 TEI (Transmit end) */
-        #define IIC0_TEI_IRQn          ((IRQn_Type) 3) /* IIC0 TEI (Transmit end) */
-        #define VECTOR_NUMBER_IIC0_ERI ((IRQn_Type) 4) /* IIC0 ERI (Transfer error) */
-        #define IIC0_ERI_IRQn          ((IRQn_Type) 4) /* IIC0 ERI (Transfer error) */
+        #define VECTOR_NUMBER_RTC_CARRY ((IRQn_Type) 1) /* RTC CARRY (Carry interrupt) */
+        #define RTC_CARRY_IRQn          ((IRQn_Type) 1) /* RTC CARRY (Carry interrupt) */
+        #define VECTOR_NUMBER_IIC0_RXI ((IRQn_Type) 2) /* IIC0 RXI (Receive data full) */
+        #define IIC0_RXI_IRQn          ((IRQn_Type) 2) /* IIC0 RXI (Receive data full) */
+        #define VECTOR_NUMBER_IIC0_TXI ((IRQn_Type) 3) /* IIC0 TXI (Transmit data empty) */
+        #define IIC0_TXI_IRQn          ((IRQn_Type) 3) /* IIC0 TXI (Transmit data empty) */
+        #define VECTOR_NUMBER_IIC0_TEI ((IRQn_Type) 4) /* IIC0 TEI (Transmit end) */
+        #define IIC0_TEI_IRQn          ((IRQn_Type) 4) /* IIC0 TEI (Transmit end) */
+        #define VECTOR_NUMBER_IIC0_ERI ((IRQn_Type) 5) /* IIC0 ERI (Transfer error) */
+        #define IIC0_ERI_IRQn          ((IRQn_Type) 5) /* IIC0 ERI (Transfer error) */
         /* The number of entries required for the ICU vector table. */
-        #define BSP_ICU_VECTOR_NUM_ENTRIES (5)
+        #define BSP_ICU_VECTOR_NUM_ENTRIES (6)
 
         #ifdef __cplusplus
         }
