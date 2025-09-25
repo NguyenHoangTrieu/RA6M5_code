@@ -6,11 +6,14 @@
         #endif
                 /* Number of interrupts allocated */
         #ifndef VECTOR_DATA_IRQ_COUNT
-        #define VECTOR_DATA_IRQ_COUNT    (0)
+        #define VECTOR_DATA_IRQ_COUNT    (1)
         #endif
         /* ISR prototypes */
+        void ether_eint_isr(void);
 
         /* Vector table allocations */
+        #define VECTOR_NUMBER_EDMAC0_EINT ((IRQn_Type) 0) /* EDMAC0 EINT (EDMAC 0 interrupt) */
+        #define EDMAC0_EINT_IRQn          ((IRQn_Type) 0) /* EDMAC0 EINT (EDMAC 0 interrupt) */
         /* The number of entries required for the ICU vector table. */
         #define BSP_ICU_VECTOR_NUM_ENTRIES (1)
 
