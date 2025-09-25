@@ -26,6 +26,12 @@ set(SRC_FILES
     
     # FSP driver files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ioport/r_ioport.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ether/r_ether.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ether_phy/r_ether_phy.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_iic_master/r_iic_master.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/rm_comms_i2c/rm_comms_i2c.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/rm_comms_i2c/rm_comms_i2c_driver_ra.c
+    
     
     # FreeRTOS source files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/aws/FreeRTOS/FreeRTOS/Source/event_groups.c
@@ -38,6 +44,8 @@ set(SRC_FILES
     
     # Generated files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/blinky_thread.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/ether_thread.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/sensor_thread.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/common_data.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/hal_data.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/main.c
@@ -46,6 +54,8 @@ set(SRC_FILES
     
     # Application files
     ${CMAKE_CURRENT_SOURCE_DIR}/src/blinky_thread_entry.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ether_thread_entry.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sensor_thread_entry.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hal_warmstart.c
 )
 

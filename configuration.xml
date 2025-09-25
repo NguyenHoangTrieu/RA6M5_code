@@ -260,6 +260,14 @@
       <description>Ethernet</description>
       <originalPack>Renesas.RA.6.1.0.pack</originalPack>
     </component>
+    <component apiversion="" class="HAL Drivers" condition="" group="all" subgroup="r_iic_master" variant="" vendor="Renesas" version="6.1.0">
+      <description>I2C Master Interface</description>
+      <originalPack>Renesas.RA.6.1.0.pack</originalPack>
+    </component>
+    <component apiversion="" class="Middleware" condition="" group="all" subgroup="rm_comms_i2c" variant="" vendor="Renesas" version="6.1.0">
+      <description>I2C Communications Implementation</description>
+      <originalPack>Renesas.RA.6.1.0.pack</originalPack>
+    </component>
   </raComponentSelection>
   <raElcConfiguration/>
   <raIcuConfiguration/>
@@ -311,6 +319,36 @@
       <property id="module.driver.ether_phy_lsi.phy_lsi_address" value="0"/>
       <property id="module.driver.ether_phy_lsi.phy_lsi_type" value="module.driver.ether_phy_lsi.phy_lsi_type.kit_component"/>
     </module>
+    <module id="module.driver.i2c_on_iic_master.1841899004">
+      <property id="module.driver.i2c_master.name" value="g_i2c_master0"/>
+      <property id="module.driver.i2c_master.channel" value="0"/>
+      <property id="module.driver.i2c_master.rate" value="module.driver.i2c_master.rate.rate_standard"/>
+      <property id="module.driver.i2c_master.rate_value" value="0"/>
+      <property id="module.driver.i2c_master.rise_time_ns" value="120"/>
+      <property id="module.driver.i2c_master.fall_time_ns" value="120"/>
+      <property id="module.driver.i2c_master.duty" value="50"/>
+      <property id="module.driver.i2c_master.slave" value="0x00"/>
+      <property id="module.driver.i2c_master.addr_mode" value="module.driver.i2c_master.addr_mode.addr_mode_7bit"/>
+      <property id="module.driver.i2c_master.timeout_mode" value="module.driver.i2c_master.timeout_mode.short_mode"/>
+      <property id="module.driver.i2c_master.timeout_scl_low" value="module.driver.i2c_master.timeout_scl_low.enabled"/>
+      <property id="module.driver.i2c_master.p_callback" value="NULL"/>
+      <property id="module.driver.i2c_master.ipl" value="board.icu.common.irq.priority12"/>
+    </module>
+    <module id="module.driver.comms_i2c_on_comms_i2c_device.1117800787">
+      <property id="module.driver.comms_i2c_device.name" value="g_comms_i2c_device0"/>
+      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x00"/>
+      <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
+      <property id="module.driver.comms_i2c_device.p_callback" value="comms_i2c_callback"/>
+    </module>
+    <module id="module.driver.comms_i2c_on_comms_i2c_bus.833127796">
+      <property id="module.driver.comms_i2c_bus.name" value="g_comms_i2c_bus0"/>
+      <property id="module.driver.comms_i2c_bus.bus_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_bus.blocking_semaphore" value="module.driver.comms_i2c_bus.blocking_semaphore.use"/>
+      <property id="module.driver.comms_i2c_bus.bus_recursive_mutex" value="module.driver.comms_i2c_bus.bus_recursive_mutex.use"/>
+      <property id="module.driver.comms_i2c_bus.channel" value="0"/>
+      <property id="module.driver.comms_i2c_bus.rate" value="module.driver.comms_i2c_bus.rate.rate_standard"/>
+    </module>
     <context id="_hal.0">
       <stack module="module.driver.ioport_on_ioport.0"/>
       <stack module="module.middleware.rm_freertos_port.0"/>
@@ -338,10 +376,26 @@
         </stack>
       </stack>
     </context>
+    <context id="rtos.awsfreertos.thread.916461534">
+      <property id="_symbol" value="sensor_thread"/>
+      <property id="rtos.awsfreertos.thread.name" value="Sensor Thread"/>
+      <property id="rtos.awsfreertos.thread.stack" value="1024"/>
+      <property id="rtos.awsfreertos.thread.priority" value="1"/>
+      <property id="rtos.awsfreertos.thread.context" value="NULL"/>
+      <property id="rtos.awsfreertos.thread.allocation" value="rtos.awsfreertos.thread.allocation.static"/>
+      <property id="rtos.awsfreertos.thread.secure_context" value="rtos.awsfreertos.thread.secure_context.enable"/>
+      <stack module="module.driver.i2c_on_iic_master.1841899004"/>
+      <stack module="module.driver.comms_i2c_on_comms_i2c_device.1117800787">
+        <stack module="module.driver.comms_i2c_on_comms_i2c_bus.833127796" requires="module.driver.comms_i2c_device.requires.comms_i2c_bus"/>
+      </stack>
+    </context>
     <config id="config.driver.ether">
       <property id="config.driver.ether.param_checking_enable" value="config.driver.ether.param_checking_enable.bsp"/>
       <property id="config.driver.ether.link_present" value="config.driver.ether.link_present.0"/>
       <property id="config.driver.ether.use_linksta" value="config.driver.ether.use_linksta.0"/>
+    </config>
+    <config id="config.driver.comms_i2c">
+      <property id="config.driver.comms_i2c.param_checking_enable" value="config.driver.comms_i2c.param_checking_enable.bsp"/>
     </config>
     <config id="config.driver.ether_phy">
       <property id="config.driver.ether_phy.param_checking_enable" value="config.driver.ether_phy.param_checking_enable.bsp"/>
@@ -352,6 +406,11 @@
       <property id="config.driver.ether_phy.use_custom_phy_lsi" value="config.driver.ether_phy.use_custom_phy_lsi.disabled"/>
       <property id="config.driver.ether_phy.use_reference_clock" value="config.driver.ether_phy.use_reference_clock.default"/>
       <property id="config.driver.ether_phy.init_phy_lsi_automatic" value="config.driver.ether_phy.init_phy_lsi_automatic.enabled"/>
+    </config>
+    <config id="config.driver.iic_master">
+      <property id="config.driver.iic_master.param_checking_enable" value="config.driver.iic_master.param_checking_enable.bsp"/>
+      <property id="config.driver.iic_master.dtc_enable" value="config.driver.iic_master.dtc_enable.disabled"/>
+      <property id="config.driver.iic_master.addr_mode_10_bit_enable" value="config.driver.iic_master.addr_mode_10_bit_enable.disabled"/>
     </config>
     <config id="config.driver.ioport">
       <property id="config.driver.ioport.checking" value="config.driver.ioport.checking.system"/>
@@ -377,8 +436,8 @@
       <property id="config.awsfreertos.thread.configidle_should_yield" value="config.awsfreertos.thread.configidle_should_yield.enabled"/>
       <property id="config.awsfreertos.thread.configuse_task_notifications" value="config.awsfreertos.thread.configuse_task_notifications.enabled"/>
       <property id="config.awsfreertos.thread.configtask_notifications_array_enteries" value="1"/>
-      <property id="config.awsfreertos.thread.configuse_mutexes" value="config.awsfreertos.thread.configuse_mutexes.disabled"/>
-      <property id="config.awsfreertos.thread.configuse_recursive_mutexes" value="config.awsfreertos.thread.configuse_recursive_mutexes.disabled"/>
+      <property id="config.awsfreertos.thread.configuse_mutexes" value="config.awsfreertos.thread.configuse_mutexes.enabled"/>
+      <property id="config.awsfreertos.thread.configuse_recursive_mutexes" value="config.awsfreertos.thread.configuse_recursive_mutexes.enabled"/>
       <property id="config.awsfreertos.thread.configuse_counting_semaphores" value="config.awsfreertos.thread.configuse_counting_semaphores.enabled"/>
       <property id="config.awsfreertos.thread.configcheck_for_stack_overflow" value="config.awsfreertos.thread.configcheck_for_stack_overflow.disabled"/>
       <property id="config.awsfreertos.thread.configqueue_registry_size" value="10"/>

@@ -103,8 +103,13 @@
             <slot name="PA08.CM33" secure="true"/>
         </peripheral>
         <peripheral name="ETHERC0.CM33" group="ETHERC" security="s"/>
+        <peripheral name="IIC0.CM33" group="IIC" security="s"/>
         <peripheral name="ICU.CM33">
             <slot name="IRQ0.CM33" secure="true"/>
+            <slot name="IRQ1.CM33" secure="true"/>
+            <slot name="IRQ2.CM33" secure="true"/>
+            <slot name="IRQ3.CM33" secure="true"/>
+            <slot name="IRQ4.CM33" secure="true"/>
         </peripheral>
     </partition>
 </azone>
