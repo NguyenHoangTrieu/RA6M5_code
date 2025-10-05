@@ -12,7 +12,7 @@
             #include "vector_data.h"
             #define RA_NOT_DEFINED 0
             #ifndef BSP_CFG_RTOS
-             #if (RA_NOT_DEFINED) != (3)
+             #if (RA_NOT_DEFINED) != (1)
               #define BSP_CFG_RTOS (2)
              #elif (RA_NOT_DEFINED) != (RA_NOT_DEFINED)
               #define BSP_CFG_RTOS (1)
@@ -21,7 +21,7 @@
              #endif
             #endif
             #ifndef BSP_CFG_RTC_USED
-             #define BSP_CFG_RTC_USED (1)
+             #define BSP_CFG_RTC_USED (RA_NOT_DEFINED)
             #endif
             #undef RA_NOT_DEFINED
             #if defined(_RA_BOOT_IMAGE)

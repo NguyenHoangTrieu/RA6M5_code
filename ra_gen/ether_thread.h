@@ -2,15 +2,15 @@
 #ifndef ETHER_THREAD_H_
 #define ETHER_THREAD_H_
 #include "bsp_api.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#include "hal_data.h"
-#ifdef __cplusplus
-extern "C" void ether_thread_entry(void * pvParameters);
-#else
-extern void ether_thread_entry(void * pvParameters);
-#endif
+                #include "FreeRTOS.h"
+                #include "task.h"
+                #include "semphr.h"
+                #include "hal_data.h"
+                #ifdef __cplusplus
+                extern "C" void ether_thread_entry(void * pvParameters);
+                #else
+                extern void ether_thread_entry(void * pvParameters);
+                #endif
 #include "r_rtc.h"
 #include "r_rtc_api.h"
 #include "r_ether_phy.h"

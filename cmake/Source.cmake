@@ -26,6 +26,7 @@ set(SRC_FILES
     
     # FSP driver files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ioport/r_ioport.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_sci_uart/r_sci_uart.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ether/r_ether.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_ether_phy/r_ether_phy.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/src/r_iic_master/r_iic_master.c
@@ -63,6 +64,7 @@ set(SRC_FILES
 # Include directories
 set(INC_FOLDERS
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ra/board/ra6m5_ck
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/arm/CMSIS_6/CMSIS/Core/Include
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/aws/FreeRTOS/FreeRTOS/Source/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ra/fsp/inc

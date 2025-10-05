@@ -3,13 +3,9 @@
 #define COMMON_DATA_H_
 #include <stdint.h>
 #include "bsp_api.h"
-#include "rm_comms_i2c.h"
-#include "rm_comms_api.h"
 #include "r_ioport.h"
 #include "bsp_pin_cfg.h"
 FSP_HEADER
-/* I2C Shared Bus */
-extern rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus0_extended_cfg;
 #define IOPORT_CFG_NAME g_bsp_pin_cfg
 #define IOPORT_CFG_OPEN R_IOPORT_Open
 #define IOPORT_CFG_CTRL g_ioport_ctrl
