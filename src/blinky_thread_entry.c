@@ -42,7 +42,7 @@ void blinky_thread_entry(void *pvParameters) {
 #if BSP_NUMBER_OF_CORES == 1
 
     /* Update all board LEDs */
-    for (uint32_t i = 0; i < leds.led_count; i++) {
+    for (uint32_t i = 1; i < leds.led_count; i++) {
       /* Get pin to toggle */
       uint32_t pin = leds.p_leds[i];
 

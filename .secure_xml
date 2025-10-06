@@ -124,12 +124,12 @@
       <configSetting altId="p708.input" configurationId="p708"/>
       <configSetting altId="p803.input" configurationId="p803"/>
       <configSetting altId="p804.input" configurationId="p804"/>
-      <configSetting altId="sci3.rxd.p706" configurationId="sci3.rxd" peripheral="SCI3"/>
-      <configSetting altId="sci3.txd.p707" configurationId="sci3.txd" peripheral="SCI3"/>
-      <configSetting altId="sci5.cts.p500" configurationId="sci5.cts" isUsedByDriver="true" peripheral="SCI5"/>
-      <configSetting altId="sci5.ctsrts.p508" configurationId="sci5.ctsrts" isUsedByDriver="true" peripheral="SCI5"/>
-      <configSetting altId="sci5.rxd.p502" configurationId="sci5.rxd" isUsedByDriver="true" peripheral="SCI5"/>
-      <configSetting altId="sci5.txd.p501" configurationId="sci5.txd" isUsedByDriver="true" peripheral="SCI5"/>
+      <configSetting altId="sci3.rxd.p706" configurationId="sci3.rxd" isUsedByDriver="true" peripheral="SCI3"/>
+      <configSetting altId="sci3.txd.p707" configurationId="sci3.txd" isUsedByDriver="true" peripheral="SCI3"/>
+      <configSetting altId="sci5.cts.p500" configurationId="sci5.cts" peripheral="SCI5"/>
+      <configSetting altId="sci5.ctsrts.p508" configurationId="sci5.ctsrts" peripheral="SCI5"/>
+      <configSetting altId="sci5.rxd.p502" configurationId="sci5.rxd" peripheral="SCI5"/>
+      <configSetting altId="sci5.txd.p501" configurationId="sci5.txd" peripheral="SCI5"/>
       <configSetting altId="sci7.scl.p614" configurationId="sci7.scl" peripheral="SCI7"/>
       <configSetting altId="sci7.sda.p613" configurationId="sci7.sda" peripheral="SCI7"/>
       <configSetting altId="sci9.ctsrts.p205" configurationId="sci9.ctsrts" peripheral="SCI9"/>
