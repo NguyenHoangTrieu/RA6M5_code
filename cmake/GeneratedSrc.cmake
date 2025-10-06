@@ -72,29 +72,29 @@ add_custom_command(
 )
 
 
-# Pre-build step: run RASC to generate project content if configuration.xml is changed
-add_custom_command(
-    OUTPUT
-        configuration.xml.stamp
-    COMMAND
-        echo "Running RASC for generating project ${PROJECT_NAME} content since modification is detected in configuration.xml:"
-    COMMAND
-        echo ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-    COMMAND
-        ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml 2> rasc_cmd_log.txt
-    COMMAND
-        ${CMAKE_COMMAND} -E touch configuration.xml.stamp
-    COMMENT
-        "RASC pre-build to generate project content for ${PROJECT_NAME}"
-    DEPENDS
-        ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-)
+# # Pre-build step: run RASC to generate project content if configuration.xml is changed
+# add_custom_command(
+#     OUTPUT
+#         configuration.xml.stamp
+#     COMMAND
+#         echo "Running RASC for generating project ${PROJECT_NAME} content since modification is detected in configuration.xml:"
+#     COMMAND
+#         echo ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
+#     COMMAND
+#         ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml 2> rasc_cmd_log.txt
+#     COMMAND
+#         ${CMAKE_COMMAND} -E touch configuration.xml.stamp
+#     COMMENT
+#         "RASC pre-build to generate project content for ${PROJECT_NAME}"
+#     DEPENDS
+#         ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
+# )
 
-add_custom_target(generate_content_${PROJECT_NAME}
-  DEPENDS configuration.xml.stamp
-)
+# add_custom_target(generate_content_${PROJECT_NAME}
+#   DEPENDS configuration.xml.stamp
+# )
 
-add_dependencies(${PROJECT_NAME}.elf generate_content_${PROJECT_NAME})
+# add_dependencies(${PROJECT_NAME}.elf generate_content_${PROJECT_NAME})
 
 
 # Post-build step: run RASC to generate the SmartBundle file
