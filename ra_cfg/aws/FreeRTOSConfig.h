@@ -80,10 +80,10 @@
             #define configTASK_NOTIFICATION_ARRAY_ENTRIES (1)
             #endif
             #ifndef configUSE_MUTEXES
-            #define configUSE_MUTEXES (0)
+            #define configUSE_MUTEXES (1)
             #endif
             #ifndef configUSE_RECURSIVE_MUTEXES
-            #define configUSE_RECURSIVE_MUTEXES (0)
+            #define configUSE_RECURSIVE_MUTEXES (1)
             #endif
             #ifndef configUSE_COUNTING_SEMAPHORES
             #define configUSE_COUNTING_SEMAPHORES (1)
@@ -125,10 +125,10 @@
             #define configSUPPORT_STATIC_ALLOCATION (1)
             #endif
             #ifndef configSUPPORT_DYNAMIC_ALLOCATION
-            #define configSUPPORT_DYNAMIC_ALLOCATION (0)
+            #define configSUPPORT_DYNAMIC_ALLOCATION (1)
             #endif
             #ifndef configTOTAL_HEAP_SIZE
-            #define configTOTAL_HEAP_SIZE (1024)
+            #define configTOTAL_HEAP_SIZE (2048)
             #endif
             #ifndef configAPPLICATION_ALLOCATED_HEAP
             #define configAPPLICATION_ALLOCATED_HEAP (0)

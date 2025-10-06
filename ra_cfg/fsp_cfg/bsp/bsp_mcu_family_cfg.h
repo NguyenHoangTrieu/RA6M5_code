@@ -77,9 +77,9 @@ extern "C" {
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 1) /* CAN1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 2) /* CAN0 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 8) /* IIC1 */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 9) /* IIC0 */ | \
+            (((1 > 0) ? 0U : 1U) << 9) /* IIC0 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 11) /* USBFS */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 15) /* ETHERC */ | \
+            (((1 > 0) ? 0U : 1U) << 15) /* ETHERC */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 16) /* OSPI */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 18) /* SPI1 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 19) /* SPI0 */ | \
@@ -87,7 +87,7 @@ extern "C" {
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 23) /* SCI8 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 24) /* SCI7 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 25) /* SCI6 */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 26) /* SCI5 */ | \
+            (((1 > 0) ? 0U : 1U) << 26) /* SCI5 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 27) /* SCI4 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 28) /* SCI3 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 29) /* SCI2 */ | \
@@ -126,7 +126,7 @@ extern "C" {
 #define BSP_TZ_CFG_PSARE (\
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 0) /* WDT */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 1) /* IWDT */ | \
-            (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 2) /* RTC */ | \
+            (((1 > 0) ? 0U : 1U) << 2) /* RTC */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 14) /* AGT5 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 15) /* AGT4 */ | \
             (((RA_NOT_DEFINED > 0) ? 0U : 1U) << 22) /* GPT9 */ | \
