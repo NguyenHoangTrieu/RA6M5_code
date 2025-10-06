@@ -218,7 +218,7 @@ const i2c_master_cfg_t g_icp_comms_i2c_lower_level_cfg = {
 };
 
 const rm_comms_cfg_t g_icp_comms_i2c_cfg = {
-    .semaphore_timeout = 0xFFFFFFFF,
+    .semaphore_timeout = 500,
     .p_lower_level_cfg = (void *)&g_icp_comms_i2c_lower_level_cfg,
     .p_extend = (void *)&g_comms_i2c_bus0_extended_cfg,
     .p_callback = icp_comms_i2c_callback,
@@ -245,7 +245,7 @@ const i2c_master_cfg_t g_zmod_comms_i2c_lower_level_cfg = {
 };
 
 const rm_comms_cfg_t g_zmod_comms_i2c_cfg = {
-    .semaphore_timeout = 0xFFFFFFFF,
+    .semaphore_timeout = 500,
     .p_lower_level_cfg = (void *)&g_zmod_comms_i2c_lower_level_cfg,
     .p_extend = (void *)&g_comms_i2c_bus0_extended_cfg,
     .p_callback = zmod_comms_i2c_callback,

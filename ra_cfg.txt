@@ -710,32 +710,9 @@ FSP Configuration
     Memory Allocation: Static
     Allocate Secure Context: Enable
     
-    Instance "g_comms_i2c_bus0 I2C Shared Bus (rm_comms_i2c)"
-      Name: g_comms_i2c_bus0
-      Bus Timeout: 0xFFFFFFFF
-      Semaphore for Blocking (RTOS only): Use
-      Recursive Mutex for Bus (RTOS only): Use
-      Channel: 0
-      Rate: Standard
-      
-      Instance "g_i2c_master0 I2C Master (r_iic_master)"
-        Name: g_i2c_master0
-        Channel: 0
-        Rate: Standard
-        Custom Rate (bps): 0
-        Rise Time (ns): 120
-        Fall Time (ns): 120
-        Duty Cycle (%): 50
-        Slave Address: 0x00
-        Address Mode: 7-Bit
-        Timeout Mode: Short Mode
-        Timeout during SCL Low: Enabled
-        Callback: rm_comms_i2c_callback
-        Interrupt Priority Level: Priority 12
-        
     Instance "g_zmod_comms_i2c I2C Communication Device (rm_comms_i2c)"
       Name: g_zmod_comms_i2c
-      Semaphore Timeout (RTOS only): 0xFFFFFFFF
+      Semaphore Timeout (RTOS only): 500
       Slave Address: 0x32
       Address Mode: 7-Bit
       Callback: zmod_comms_i2c_callback
@@ -765,7 +742,7 @@ FSP Configuration
           
     Instance "g_icp_comms_i2c I2C Communication Device (rm_comms_i2c)"
       Name: g_icp_comms_i2c
-      Semaphore Timeout (RTOS only): 0xFFFFFFFF
+      Semaphore Timeout (RTOS only): 500
       Slave Address: 0x63
       Address Mode: 7-Bit
       Callback: icp_comms_i2c_callback

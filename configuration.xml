@@ -334,14 +334,14 @@
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1982412110">
       <property id="module.driver.comms_i2c_device.name" value="g_zmod_comms_i2c"/>
-      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
       <property id="module.driver.comms_i2c_device.slave_address" value="0x32"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
       <property id="module.driver.comms_i2c_device.p_callback" value="zmod_comms_i2c_callback"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1613965759">
       <property id="module.driver.comms_i2c_device.name" value="g_icp_comms_i2c"/>
-      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
       <property id="module.driver.comms_i2c_device.slave_address" value="0x63"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
       <property id="module.driver.comms_i2c_device.p_callback" value="icp_comms_i2c_callback"/>
@@ -468,9 +468,6 @@
       <property id="rtos.awsfreertos.thread.context" value="NULL"/>
       <property id="rtos.awsfreertos.thread.allocation" value="rtos.awsfreertos.thread.allocation.static"/>
       <property id="rtos.awsfreertos.thread.secure_context" value="rtos.awsfreertos.thread.secure_context.enable"/>
-      <stack module="module.driver.comms_i2c_on_comms_i2c_bus.820941943">
-        <stack module="module.driver.i2c_on_iic_master.910462581" requires="module.driver.comms_i2c_bus.requires.i2c"/>
-      </stack>
       <stack module="module.driver.comms_i2c_on_comms_i2c_device.1982412110">
         <stack module="module.driver.comms_i2c_on_comms_i2c_bus.820941943" requires="module.driver.comms_i2c_device.requires.comms_i2c_bus">
           <stack module="module.driver.i2c_on_iic_master.910462581" requires="module.driver.comms_i2c_bus.requires.i2c"/>
