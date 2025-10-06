@@ -335,7 +335,7 @@
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1982412110">
       <property id="module.driver.comms_i2c_device.name" value="g_zmod_comms_i2c"/>
       <property id="module.driver.comms_i2c_device.semaphore_timeout" value="0xFFFFFFFF"/>
-      <property id="module.driver.comms_i2c_device.slave_address" value="0x33"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x32"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
       <property id="module.driver.comms_i2c_device.p_callback" value="zmod_comms_i2c_callback"/>
     </module>

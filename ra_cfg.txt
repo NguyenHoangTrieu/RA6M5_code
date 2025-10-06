@@ -736,7 +736,7 @@ FSP Configuration
     Instance "g_zmod_comms_i2c I2C Communication Device (rm_comms_i2c)"
       Name: g_zmod_comms_i2c
       Semaphore Timeout (RTOS only): 0xFFFFFFFF
-      Slave Address: 0x33
+      Slave Address: 0x32
       Address Mode: 7-Bit
       Callback: zmod_comms_i2c_callback
       
