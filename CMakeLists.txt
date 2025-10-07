@@ -46,4 +46,4 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/GeneratedCfg.cmake)
 
 # If required user can amend RASC generated flags here, e.g. list(REMOVE_ITEM RASC_CMAKE_C_FLAGS "-Wall")
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/GeneratedSrc.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/GeneratedSrc1.cmake)

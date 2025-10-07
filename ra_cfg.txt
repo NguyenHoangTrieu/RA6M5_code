@@ -696,7 +696,7 @@ FSP Configuration
     Symbol: blinky_thread
     Name: Blinky Thread
     Stack size (bytes): 512
-    Priority: 1
+    Priority: 5
     Thread Context: NULL
     Memory Allocation: Static
     Allocate Secure Context: Enable
@@ -719,7 +719,7 @@ FSP Configuration
       
       Instance "g_comms_i2c_bus0 I2C Shared Bus (rm_comms_i2c)"
         Name: g_comms_i2c_bus0
-        Bus Timeout: 0xFFFFFFFF
+        Bus Timeout: 500
         Semaphore for Blocking (RTOS only): Use
         Recursive Mutex for Bus (RTOS only): Use
         Channel: 0
@@ -749,7 +749,7 @@ FSP Configuration
       
       Instance "g_comms_i2c_bus0 I2C Shared Bus (rm_comms_i2c)"
         Name: g_comms_i2c_bus0
-        Bus Timeout: 0xFFFFFFFF
+        Bus Timeout: 500
         Semaphore for Blocking (RTOS only): Use
         Recursive Mutex for Bus (RTOS only): Use
         Channel: 0

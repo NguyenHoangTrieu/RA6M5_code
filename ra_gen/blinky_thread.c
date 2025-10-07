@@ -38,7 +38,7 @@ extern uint32_t g_fsp_common_thread_count;
                         (const char *)"Blinky Thread",
                         512/4, // In words, not bytes
                         (void *) &blinky_thread_parameters, //pvParameters
-                        1,
+                        5,
                         #if 1
                         (StackType_t *)&blinky_thread_stack,
                         (StaticTask_t *)&blinky_thread_memory

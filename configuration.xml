@@ -326,7 +326,7 @@
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_bus.820941943">
       <property id="module.driver.comms_i2c_bus.name" value="g_comms_i2c_bus0"/>
-      <property id="module.driver.comms_i2c_bus.bus_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_bus.bus_timeout" value="500"/>
       <property id="module.driver.comms_i2c_bus.blocking_semaphore" value="module.driver.comms_i2c_bus.blocking_semaphore.use"/>
       <property id="module.driver.comms_i2c_bus.bus_recursive_mutex" value="module.driver.comms_i2c_bus.bus_recursive_mutex.use"/>
       <property id="module.driver.comms_i2c_bus.channel" value="0"/>
@@ -455,7 +455,7 @@
       <property id="_symbol" value="blinky_thread"/>
       <property id="rtos.awsfreertos.thread.name" value="Blinky Thread"/>
       <property id="rtos.awsfreertos.thread.stack" value="512"/>
-      <property id="rtos.awsfreertos.thread.priority" value="1"/>
+      <property id="rtos.awsfreertos.thread.priority" value="5"/>
       <property id="rtos.awsfreertos.thread.context" value="NULL"/>
       <property id="rtos.awsfreertos.thread.allocation" value="rtos.awsfreertos.thread.allocation.static"/>
       <property id="rtos.awsfreertos.thread.secure_context" value="rtos.awsfreertos.thread.secure_context.enable"/>

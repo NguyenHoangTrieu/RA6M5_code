@@ -8,8 +8,7 @@ file(GLOB_RECURSE Source_Files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/sensor_handler/*.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 
 SET(ALL_FILES ${Source_Files})
@@ -49,7 +48,6 @@ target_include_directories(${PROJECT_NAME}.elf
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_cfg/fsp_cfg/bsp
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/sensor_handler
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}/
 )
@@ -75,28 +73,28 @@ add_custom_command(
 
 
 # Pre-build step: run RASC to generate project content if configuration.xml is changed
-add_custom_command(
-    OUTPUT
-        configuration.xml.stamp
-    COMMAND
-        echo "Running RASC for generating project ${PROJECT_NAME} content since modification is detected in configuration.xml:"
-    COMMAND
-        echo ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-    COMMAND
-        ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml 2> rasc_cmd_log.txt
-    COMMAND
-        ${CMAKE_COMMAND} -E touch configuration.xml.stamp
-    COMMENT
-        "RASC pre-build to generate project content for ${PROJECT_NAME}"
-    DEPENDS
-        ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
-)
+# add_custom_command(
+#     OUTPUT
+#         configuration.xml.stamp
+#     COMMAND
+#         echo "Running RASC for generating project ${PROJECT_NAME} content since modification is detected in configuration.xml:"
+#     COMMAND
+#         echo ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
+#     COMMAND
+#         ${RASC_EXE_PATH}  -nosplash --launcher.suppressErrors --generate --devicefamily ra --compiler GCC --toolchainversion ${CMAKE_C_COMPILER_VERSION} ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml 2> rasc_cmd_log.txt
+#     COMMAND
+#         ${CMAKE_COMMAND} -E touch configuration.xml.stamp
+#     COMMENT
+#         "RASC pre-build to generate project content for ${PROJECT_NAME}"
+#     DEPENDS
+#         ${CMAKE_CURRENT_SOURCE_DIR}/configuration.xml
+# )
 
-add_custom_target(generate_content_${PROJECT_NAME}
-  DEPENDS configuration.xml.stamp
-)
+# add_custom_target(generate_content_${PROJECT_NAME}
+#   DEPENDS configuration.xml.stamp
+# )
 
-add_dependencies(${PROJECT_NAME}.elf generate_content_${PROJECT_NAME})
+# add_dependencies(${PROJECT_NAME}.elf generate_content_${PROJECT_NAME})
 
 
 # Post-build step: run RASC to generate the SmartBundle file

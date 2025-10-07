@@ -247,7 +247,7 @@ rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus0_extended_cfg =
     .p_driver_instance      = (void*)&RA_NOT_DEFINED,
 #endif
     .p_current_ctrl = NULL,
-    .bus_timeout = 0xFFFFFFFF,
+    .bus_timeout = 500,
 #if BSP_CFG_RTOS
 #if !defined(g_comms_i2c_bus0_blocking_semaphore)
     .p_blocking_semaphore = &g_comms_i2c_bus0_blocking_semaphore,
