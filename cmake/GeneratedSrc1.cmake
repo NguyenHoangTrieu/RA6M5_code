@@ -8,7 +8,8 @@ file(GLOB_RECURSE Source_Files
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sensor_handler/*.c)
 
 
 SET(ALL_FILES ${Source_Files})
@@ -48,6 +49,7 @@ target_include_directories(${PROJECT_NAME}.elf
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_cfg/fsp_cfg/bsp
     ${CMAKE_CURRENT_SOURCE_DIR}/ra_gen
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/sensor_handler
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}/
 )
