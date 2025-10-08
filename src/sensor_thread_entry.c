@@ -63,7 +63,7 @@ void sensor_thread_entry(void *pvParameters) {
   uart_print("=== ICP-10101 Sensor Verification (new API) ===\r\n");
 
   // Open/init I2C and ICP
-  i2c_comms_init(&g_icp_comms_i2c_cfg);
+  i2c_comms_init(&g_zmod_comms_i2c_cfg);
   err = icp10101_init();
   snprintf(uart_msg, sizeof(uart_msg), "ICP I2C Open: %s\r\n",
            (err == FSP_SUCCESS ? "OK" : "ERR"));
@@ -94,11 +94,10 @@ void sensor_thread_entry(void *pvParameters) {
   uart_print(uart_msg);
 
   // Open/init I2C and ZMOD
-  i2c_comms_init(&g_zmod_comms_i2c_cfg);
-//   err = zmod4410_init();
-//   snprintf(uart_msg, sizeof(uart_msg), "ZMOD I2C Open: %s\r\n",
-//            (err == FSP_SUCCESS ? "OK" : "ERR"));
-//   uart_print(uart_msg);
+  err = zmod4410_init();
+  snprintf(uart_msg, sizeof(uart_msg), "ZMOD I2C Open: %s\r\n",
+           (err == FSP_SUCCESS ? "OK" : "ERR"));
+  uart_print(uart_msg);
 
   // Measurement loop (Low Noise Mode, API mới)
   uint32_t loop_count = 0;
@@ -112,15 +111,15 @@ void sensor_thread_entry(void *pvParameters) {
                pressure, temp, err == FSP_SUCCESS ? "OK" : "ERR");
       uart_print(uart_msg);
     }
-    // vTaskDelay(pdMS_TO_TICKS(100));
-    // zmod4410_data_t zdata = {0};
-    // err = zmod4410_read(&zdata);
-    // if (err == FSP_SUCCESS) {
-    //   snprintf(uart_msg + strlen(uart_msg), sizeof(uart_msg) - strlen(uart_msg),
-    //            "ZMOD: TVOC=%.1fppb eCO2=%.1fppm IAQ=%d [%s]\r\n", zdata.tvoc,
-    //            zdata.eco2, zdata.iaq, err == FSP_SUCCESS ? "OK" : "ERR");
-    //   uart_print(uart_msg);
-    // }
+
+    zmod4410_data_t zdata = {0};
+    err = zmod4410_read(&zdata);
+    if (err == FSP_SUCCESS) {
+      snprintf(uart_msg, sizeof(uart_msg),
+               "ZMOD: TVOC=%.1fppb eCO2=%.1fppm IAQ=%d [%s]\r\n", zdata.tvoc,
+               zdata.eco2, zdata.iaq, err == FSP_SUCCESS ? "OK" : "ERR");
+      uart_print(uart_msg);
+    }
 
     // Blink LED
     R_BSP_PinAccessEnable();

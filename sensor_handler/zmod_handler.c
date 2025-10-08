@@ -51,6 +51,14 @@ fsp_err_t zmod4410_read_raw(uint8_t *raw, uint8_t len)
     gi2c_done_zmod = 0;
     return err;
 }
+// IAQ level based on TVOC in mg/m3 (from datasheet Figure 8/Section 4.4)
+int zmod4410_calc_iaq_level(float tvoc_mg_m3) {
+    if (tvoc_mg_m3 <= 0.3f) return 1;        // Very Good
+    else if (tvoc_mg_m3 <= 1.0f) return 2;   // Good
+    else if (tvoc_mg_m3 <= 3.0f) return 3;   // Medium
+    else if (tvoc_mg_m3 <= 10.0f) return 4;  // Poor
+    else return 5;                           // Bad
+}
 
 /**
  * Main ZMOD4410 reading function: fetches IAQ/TVOC/eCO2
@@ -63,17 +71,27 @@ fsp_err_t zmod4410_read(zmod4410_data_t *out)
     fsp_err_t err = zmod4410_read_raw(raw, 6);
     if (err != FSP_SUCCESS) return err;
 
-    // Example: raw[0/1] = RMox ADC, raw[2/3] = ..., raw[4/5]=...
-    // Here just use raw[0/1] as big endian RMox, and calculate rough IAQ values (fake for demo)
+    // Use raw[0/1] as RMox (big endian)
     out->rmox = (raw[0] << 8) | raw[1];
 
-    // Simple conversion (for actual use, apply Renesas library, here some dummy scales for demo)
-    out->tvoc = (float)out->rmox / 10.0f;           // Example TVOC (ppb)
-    out->eco2 = (float)out->rmox / 5.0f + 400.0f;   // Example eCO2 (ppm, 400ppm base)
-    out->iaq  = (out->rmox < 200) ? 1 : (out->rmox<400 ? 2 : 3);  // IAQ index (1=good,3=bad)
+    // Estimate TVOC (ppb), then convert to mg/m3
+    // Dummy: TVOC_ppb = rmox * 2; (replace factor by calibration if available!)
+    float tvoc_ppb = (float)out->rmox * 2.0f;
+    float tvoc_mg_m3 = (tvoc_ppb / 1000.0f) * 2.0f; // 1ppm TVOC = 2mg/m3 (datasheet)
+
+    // Estimate eCO2 based on TVOC (datasheet Figure 8/Section 4.4)
+    float eco2 = 400.0f + (tvoc_ppb/1000.0f)*1600.0f;
+    if (eco2 > 5000.0f) eco2 = 5000.0f;
+
+    int iaq_level = zmod4410_calc_iaq_level(tvoc_mg_m3);
+
+    out->tvoc = tvoc_ppb;
+    out->eco2 = eco2;
+    out->iaq = iaq_level;
+    // Optional: print/read code can convert out->iaq to string IAQ_UBA rating if muốn
+
     return FSP_SUCCESS;
 }
-
 
 void zmod_comms_i2c_callback(rm_comms_callback_args_t *p_args) {
   if (p_args->event == RM_COMMS_EVENT_OPERATION_COMPLETE) {
