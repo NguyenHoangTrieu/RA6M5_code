@@ -1,6 +1,6 @@
 @echo off
-set "PATH=%PATH%;C:\Program Files (x86)\Renesas Electronics\Programming Tools\Renesas Flash Programmer V3.20"
-set "ARM_TOOLCHAIN_PATH=C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\13.2 Rel1\bin"
+set "PATH=%PATH%;C:\Program Files (x86)\Renesas Electronics\Programming Tools\Renesas Flash Programmer V3.21"
+set "ARM_TOOLCHAIN_PATH=C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.3 rel1\bin"
 
 if not exist "%ARM_TOOLCHAIN_PATH%\arm-none-eabi-gcc.exe" (
     echo ERROR: Toolchain not found
