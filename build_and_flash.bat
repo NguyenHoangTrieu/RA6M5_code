@@ -1,8 +1,38 @@
-set PATH=%PATH%;C:\Program Files (x86)\Renesas Electronics\Programming Tools\Renesas Flash Programmer V3.20
-rmdir /s /q build
+@echo off
+set "PATH=%PATH%;C:\Program Files (x86)\Renesas Electronics\Programming Tools\Renesas Flash Programmer V3.20"
+set "ARM_TOOLCHAIN_PATH=C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\13.2 Rel1\bin"
+
+if not exist "%ARM_TOOLCHAIN_PATH%\arm-none-eabi-gcc.exe" (
+    echo ERROR: Toolchain not found
+    pause
+    exit /b 1
+)
+
+if exist build rmdir /s /q build
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi-gcc.cmake -DCMAKE_BUILD_TYPE=Release ..
+
+cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/gcc.cmake -DCMAKE_BUILD_TYPE=Release -DARM_TOOLCHAIN_PATH="%ARM_TOOLCHAIN_PATH%" ..
+if errorlevel 1 (
+    cd ..
+    pause
+    exit /b 1
+)
+
 ninja
-@REM "ShowEmuList" | & "C:\Program Files\SEGGER\JLink_V864a\JLink.exe" | Select-String "Serial number"
-rfp-cli -device RA -t jlink -tool jlink:831351518 -auto -erase -program RA6M5_code.hex -verify
+if errorlevel 1 (
+    cd ..
+    pause
+    exit /b 1
+)
+
+cd ..
+rfp-cli -device RA -t jlink -tool jlink:831351518 -auto -erase -program build/Test_Project.srec -verify
+
+if errorlevel 1 (
+    pause
+    exit /b 1
+)
+
+echo Build and Flash completed!
+pause
