@@ -531,10 +531,6 @@ FSP Configuration
     RS-485 Support: Disable
     IrDA Support: Disabled
     
-  Module "Realtime Clock (r_rtc)"
-    Parameter Checking: Default (BSP)
-    Set Source Clock in Open: Enabled
-    
   Module "Ethernet (r_ether)"
     Parameter Checking: Default (BSP)
     ET0_LINKSTA Pin Status Flag: Fall -> Rise
@@ -818,19 +814,6 @@ FSP Configuration
     Memory Allocation: Static
     Allocate Secure Context: Enable
     
-    Instance "g_rtc0 Realtime Clock (r_rtc)"
-      Name: g_rtc0
-      Clock Source: LOCO
-      Frequency Comparison Value (LOCO): 255
-      Automatic Adjustment Mode: Enabled
-      Automatic Adjustment Period: 10 Seconds
-      Adjustment Type (Plus-Minus): NONE
-      Error Adjustment Value: 0
-      Callback: NULL
-      Alarm Interrupt Priority: Disabled
-      Period Interrupt Priority: Disabled
-      Carry Interrupt Priority: Priority 12
-      
     Instance "FreeRTOS+TCP"
       Instance "g_freertos_plus_tcp0 FreeRTOS+TCP Wrapper to ethernet driver (rm_freertos_plus_tcp)"
         Name: g_freertos_plus_tcp0
@@ -880,3 +863,33 @@ FSP Configuration
               
         Instance "FreeRTOS Buffer Allocation 2"
     Instance "FreeRTOS Heap 4"
+    Instance "g_comms_i2c_device_rtc I2C Communication Device (rm_comms_i2c)"
+      Name: g_comms_i2c_device_rtc
+      Semaphore Timeout (RTOS only): 0xFFFFFFFF
+      Slave Address: 0x00
+      Address Mode: 7-Bit
+      Callback: comms_i2c_callback
+      
+      Instance "g_comms_i2c_bus1 I2C Shared Bus (rm_comms_i2c)"
+        Name: g_comms_i2c_bus1
+        Bus Timeout: 0xFFFFFFFF
+        Semaphore for Blocking (RTOS only): Use
+        Recursive Mutex for Bus (RTOS only): Use
+        Channel: 1
+        Rate: Standard
+        
+        Instance "g_i2c_master1 I2C Master (r_iic_master)"
+          Name: g_i2c_master1
+          Channel: 1
+          Rate: Standard
+          Custom Rate (bps): 0
+          Rise Time (ns): 120
+          Fall Time (ns): 120
+          Duty Cycle (%): 50
+          Slave Address: 0x00
+          Address Mode: 7-Bit
+          Timeout Mode: Short Mode
+          Timeout during SCL Low: Enabled
+          Callback: rm_comms_i2c_callback
+          Interrupt Priority Level: Priority 12
+          

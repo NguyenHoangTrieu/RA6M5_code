@@ -12,8 +12,11 @@
             [5] = sci_uart_txi_isr, /* SCI3 TXI (Transmit data empty) */
             [6] = sci_uart_tei_isr, /* SCI3 TEI (Transmit end) */
             [7] = sci_uart_eri_isr, /* SCI3 ERI (Receive error) */
-            [8] = rtc_carry_isr, /* RTC CARRY (Carry interrupt) */
-            [9] = ether_eint_isr, /* EDMAC0 EINT (EDMAC 0 interrupt) */
+            [8] = ether_eint_isr, /* EDMAC0 EINT (EDMAC 0 interrupt) */
+            [9] = iic_master_rxi_isr, /* IIC1 RXI (Receive data full) */
+            [10] = iic_master_txi_isr, /* IIC1 TXI (Transmit data empty) */
+            [11] = iic_master_tei_isr, /* IIC1 TEI (Transmit end) */
+            [12] = iic_master_eri_isr, /* IIC1 ERI (Transfer error) */
         };
         #if BSP_FEATURE_ICU_HAS_IELSR
         const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_NUM_ENTRIES] =
@@ -26,8 +29,11 @@
             [5] = BSP_PRV_VECT_ENUM(EVENT_SCI3_TXI,GROUP5), /* SCI3 TXI (Transmit data empty) */
             [6] = BSP_PRV_VECT_ENUM(EVENT_SCI3_TEI,GROUP6), /* SCI3 TEI (Transmit end) */
             [7] = BSP_PRV_VECT_ENUM(EVENT_SCI3_ERI,GROUP7), /* SCI3 ERI (Receive error) */
-            [8] = BSP_PRV_VECT_ENUM(EVENT_RTC_CARRY,GROUP0), /* RTC CARRY (Carry interrupt) */
-            [9] = BSP_PRV_VECT_ENUM(EVENT_EDMAC0_EINT,GROUP1), /* EDMAC0 EINT (EDMAC 0 interrupt) */
+            [8] = BSP_PRV_VECT_ENUM(EVENT_EDMAC0_EINT,GROUP0), /* EDMAC0 EINT (EDMAC 0 interrupt) */
+            [9] = BSP_PRV_VECT_ENUM(EVENT_IIC1_RXI,GROUP1), /* IIC1 RXI (Receive data full) */
+            [10] = BSP_PRV_VECT_ENUM(EVENT_IIC1_TXI,GROUP2), /* IIC1 TXI (Transmit data empty) */
+            [11] = BSP_PRV_VECT_ENUM(EVENT_IIC1_TEI,GROUP3), /* IIC1 TEI (Transmit end) */
+            [12] = BSP_PRV_VECT_ENUM(EVENT_IIC1_ERI,GROUP4), /* IIC1 ERI (Transfer error) */
         };
         #endif
         #endif

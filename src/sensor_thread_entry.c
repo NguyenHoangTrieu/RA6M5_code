@@ -4,7 +4,7 @@
 #include "zmod_handler.h"
 #include <stdio.h>
 #include <string.h>
-
+#include "sensor_data_queue.h"
 
 extern bsp_leds_t g_bsp_leds;
 extern rm_comms_i2c_instance_ctrl_t g_icp_comms_i2c_ctrl;
@@ -57,7 +57,7 @@ void sensor_thread_entry(void *pvParameters) {
   char uart_msg[128];
   bsp_io_level_t pin_level = BSP_IO_LEVEL_LOW;
   fsp_err_t err;
-
+  sensor_data_t sensor_data;
   // Open UART
   err = RM_COMMS_UART_Open(&g_comms_uart0_ctrl, &g_comms_uart0_cfg);
   uart_print("=== ICP-10101 Sensor Verification (new API) ===\r\n");
@@ -106,6 +106,18 @@ void sensor_thread_entry(void *pvParameters) {
     float temp = 0;
     err = icp10101_read(&pressure, &temp);
     if (err == FSP_SUCCESS) {
+      // Prepare sensor data for queue
+      memset(&sensor_data, 0, sizeof(sensor_data_t));
+      snprintf(sensor_data.sensor_name, sizeof(sensor_data.sensor_name), "icp10101");
+      sensor_data.value1 = pressure;
+      sensor_data.value2 = temp;
+      snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "Pa");
+      snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "C");
+      
+      // Send to queue
+      if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) != pdPASS) {
+          uart_print("WARN: Queue full, data dropped\r\n");
+      }
       snprintf(uart_msg, sizeof(uart_msg),
                "Loop %lu: Pressure: %.2f Pa, Temp: %.2f C [%s]\r\n", loop_count,
                pressure, temp, err == FSP_SUCCESS ? "OK" : "ERR");
@@ -115,6 +127,17 @@ void sensor_thread_entry(void *pvParameters) {
     zmod4410_data_t zdata = {0};
     err = zmod4410_read(&zdata);
     if (err == FSP_SUCCESS) {
+      // Prepare sensor data for queue
+      memset(&sensor_data, 0, sizeof(sensor_data_t));
+      snprintf(sensor_data.sensor_name, sizeof(sensor_data.sensor_name), "zmod4410");
+      sensor_data.value1 = zdata.tvoc;
+      sensor_data.value2 = (float)zdata.iaq;
+      snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "ppb");
+      snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "iaq");
+      // Send to queue
+      if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) != pdPASS) {
+          uart_print("WARN: Queue full, data dropped\r\n");
+      }
       snprintf(uart_msg, sizeof(uart_msg),
                "ZMOD: TVOC=%.1fppb eCO2=%.1fppm IAQ=%d [%s]\r\n", zdata.tvoc,
                zdata.eco2, zdata.iaq, err == FSP_SUCCESS ? "OK" : "ERR");
