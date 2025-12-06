@@ -18,7 +18,7 @@ typedef struct {
 extern QueueHandle_t g_sensor_data_queue;
 
 /* Queue parameters */
-#define SENSOR_QUEUE_LENGTH     10
+#define SENSOR_QUEUE_LENGTH     20
 #define SENSOR_QUEUE_ITEM_SIZE  sizeof(sensor_data_t)
 
 /* Function to create queue */

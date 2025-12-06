@@ -133,7 +133,7 @@
     </config>
     <config id="config.bsp.ra">
       <property id="config.bsp.common.main" value="0x400"/>
-      <property id="config.bsp.common.heap" value="0x400"/>
+      <property id="config.bsp.common.heap" value="0x5000"/>
       <property id="config.bsp.common.bootloader.xip_enable" value="config.bsp.common.bootloader.xip_enable.disabled"/>
       <property id="config.bsp.common.vcc" value="3300"/>
       <property id="config.bsp.common.checking" value="config.bsp.common.checking.disabled"/>
@@ -329,11 +329,11 @@
       <property id="module.driver.comms_i2c_bus.rate" value="module.driver.comms_i2c_bus.rate.rate_standard"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1982412110">
-      <property id="module.driver.comms_i2c_device.name" value="g_zmod_comms_i2c"/>
+      <property id="module.driver.comms_i2c_device.name" value="g_biomet_comms_i2c"/>
       <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
-      <property id="module.driver.comms_i2c_device.slave_address" value="0x32"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x53"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
-      <property id="module.driver.comms_i2c_device.p_callback" value="zmod_comms_i2c_callback"/>
+      <property id="module.driver.comms_i2c_device.p_callback" value="biomet_comms_i2c_callback"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1613965759">
       <property id="module.driver.comms_i2c_device.name" value="g_icp_comms_i2c"/>
@@ -384,7 +384,7 @@
     <module id="module.driver.ether_on_ether.1736381635">
       <property id="module.driver.ether.name" value="g_ether0"/>
       <property id="module.driver.ether.channel" value="module.driver.ether.channel.0"/>
-      <property id="module.driver.ether.mac_address" value="00:11:22:33:44:55"/>
+      <property id="module.driver.ether.mac_address" value="74:90:50:10:C5:11"/>
       <property id="module.driver.ether.zerocopy" value="module.driver.ether.zerocopy.0"/>
       <property id="module.driver.ether.flow_control" value="module.driver.ether.flow_control.0"/>
       <property id="module.driver.ether.multicast" value="module.driver.ether.multicast.1"/>
@@ -404,7 +404,7 @@
     <module id="module.driver.ether_phy_on_ether_phy.327364967">
       <property id="module.driver.ether_phy.name" value="g_ether_phy0"/>
       <property id="module.driver.ether_phy.channel" value="module.driver.ether_phy.channel.0"/>
-      <property id="module.driver.ether_phy.phy_lsi_address" value="0"/>
+      <property id="module.driver.ether_phy.phy_lsi_address" value="5"/>
       <property id="module.driver.ether_phy.default_phy_lsi_port" value="module.driver.ether_phy.default_phy_lsi_port.0"/>
       <property id="module.driver.ether_phy.phy_reset_wait_time" value="0x00020000"/>
       <property id="module.driver.ether_phy.mii_type" value="module.driver.mii_type.rmii"/>
@@ -416,7 +416,7 @@
     </module>
     <module id="module.driver.ether_phy_lsi_on_ether_phy.1209824302">
       <property id="module.driver.ether_phy_lsi.name" value="g_ether_phy_lsi0"/>
-      <property id="module.driver.ether_phy_lsi.phy_lsi_address" value="0"/>
+      <property id="module.driver.ether_phy_lsi.phy_lsi_address" value="5"/>
       <property id="module.driver.ether_phy_lsi.phy_lsi_type" value="module.driver.ether_phy_lsi.phy_lsi_type.kit_component"/>
     </module>
     <module id="module.aws.freertosplus.freertosplus_tcp.136231586"/>
@@ -432,14 +432,14 @@
     <module id="module.freertos.heap.4.1384332336"/>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.931771512">
       <property id="module.driver.comms_i2c_device.name" value="g_comms_i2c_device_rtc"/>
-      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="0xFFFFFFFF"/>
-      <property id="module.driver.comms_i2c_device.slave_address" value="0x00"/>
+      <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x63"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
       <property id="module.driver.comms_i2c_device.p_callback" value="comms_i2c_callback"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_bus.2040178501">
       <property id="module.driver.comms_i2c_bus.name" value="g_comms_i2c_bus1"/>
-      <property id="module.driver.comms_i2c_bus.bus_timeout" value="0xFFFFFFFF"/>
+      <property id="module.driver.comms_i2c_bus.bus_timeout" value="500"/>
       <property id="module.driver.comms_i2c_bus.blocking_semaphore" value="module.driver.comms_i2c_bus.blocking_semaphore.use"/>
       <property id="module.driver.comms_i2c_bus.bus_recursive_mutex" value="module.driver.comms_i2c_bus.bus_recursive_mutex.use"/>
       <property id="module.driver.comms_i2c_bus.channel" value="1"/>
@@ -476,7 +476,7 @@
     <context id="rtos.awsfreertos.thread.424198964">
       <property id="_symbol" value="sensor_thread"/>
       <property id="rtos.awsfreertos.thread.name" value="Sensor Thread"/>
-      <property id="rtos.awsfreertos.thread.stack" value="2048"/>
+      <property id="rtos.awsfreertos.thread.stack" value="8192"/>
       <property id="rtos.awsfreertos.thread.priority" value="4"/>
       <property id="rtos.awsfreertos.thread.context" value="NULL"/>
       <property id="rtos.awsfreertos.thread.allocation" value="rtos.awsfreertos.thread.allocation.static"/>
@@ -498,7 +498,7 @@
     <context id="rtos.awsfreertos.thread.934792819">
       <property id="_symbol" value="ether_thread"/>
       <property id="rtos.awsfreertos.thread.name" value="Ethernet Thread"/>
-      <property id="rtos.awsfreertos.thread.stack" value="2048"/>
+      <property id="rtos.awsfreertos.thread.stack" value="8912"/>
       <property id="rtos.awsfreertos.thread.priority" value="3"/>
       <property id="rtos.awsfreertos.thread.context" value="NULL"/>
       <property id="rtos.awsfreertos.thread.allocation" value="rtos.awsfreertos.thread.allocation.static"/>
@@ -536,7 +536,7 @@
       <property id="config.driver.ether_phy.target_ksz8091rnb" value="config.driver.ether_phy.target_ksz8091rnb.disabled"/>
       <property id="config.driver.ether_phy.target_ksz8041" value="config.driver.ether_phy.target_ksz8041.disabled"/>
       <property id="config.driver.ether_phy.target_dp83620" value="config.driver.ether_phy.target_dp83620.disabled"/>
-      <property id="config.driver.ether_phy.target_ics1894" value="config.driver.ether_phy.target_ics1894.disabled"/>
+      <property id="config.driver.ether_phy.target_ics1894" value="config.driver.ether_phy.target_ics1894.enabled"/>
       <property id="config.driver.ether_phy.use_custom_phy_lsi" value="config.driver.ether_phy.use_custom_phy_lsi.disabled"/>
       <property id="config.driver.ether_phy.use_reference_clock" value="config.driver.ether_phy.use_reference_clock.default"/>
       <property id="config.driver.ether_phy.init_phy_lsi_automatic" value="config.driver.ether_phy.init_phy_lsi_automatic.enabled"/>
@@ -581,7 +581,7 @@
       <property id="config.awsfreertos.thread.configuse_mutexes" value="config.awsfreertos.thread.configuse_mutexes.enabled"/>
       <property id="config.awsfreertos.thread.configuse_recursive_mutexes" value="config.awsfreertos.thread.configuse_recursive_mutexes.enabled"/>
       <property id="config.awsfreertos.thread.configuse_counting_semaphores" value="config.awsfreertos.thread.configuse_counting_semaphores.enabled"/>
-      <property id="config.awsfreertos.thread.configcheck_for_stack_overflow" value="config.awsfreertos.thread.configcheck_for_stack_overflow.disabled"/>
+      <property id="config.awsfreertos.thread.configcheck_for_stack_overflow" value="config.awsfreertos.thread.configcheck_for_stack_overflow.enabled"/>
       <property id="config.awsfreertos.thread.configqueue_registry_size" value="10"/>
       <property id="config.awsfreertos.thread.configuse_queue_sets" value="config.awsfreertos.thread.configuse_queue_sets.disabled"/>
       <property id="config.awsfreertos.thread.configuse_time_slicing" value="config.awsfreertos.thread.configuse_time_slicing.disabled"/>
@@ -641,7 +641,7 @@
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigIP_TASK_STACK_SIZE_WORDS" value="configMINIMAL_STACK_SIZE * 5"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_NETWORK_EVENT_HOOK" value="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_NETWORK_EVENT_HOOK.1"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUDP_MAX_SEND_BLOCK_TIME_TICKS" value="15000 / portTICK_PERIOD_MS"/>
-      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP" value="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP.1"/>
+      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP" value="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP.0"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigDHCP_REGISTER_HOSTNAME" value="config.aws.freertosplus.freertosplus_tcp.ipconfigDHCP_REGISTER_HOSTNAME.1"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigDHCP_USES_UNICAST" value="config.aws.freertosplus.freertosplus_tcp.ipconfigDHCP_USES_UNICAST.1"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP_HOOK" value="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_DHCP_HOOK.0"/>
@@ -649,7 +649,7 @@
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigARP_CACHE_ENTRIES" value="6"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigMAX_ARP_RETRANSMISSIONS" value="5"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigMAX_ARP_AGE" value="150"/>
-      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigINCLUDE_FULL_INET_ADDR" value="config.aws.freertosplus.freertosplus_tcp.ipconfigINCLUDE_FULL_INET_ADDR.1"/>
+      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigINCLUDE_FULL_INET_ADDR" value="config.aws.freertosplus.freertosplus_tcp.ipconfigINCLUDE_FULL_INET_ADDR.0"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS" value="10"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigEVENT_QUEUE_LENGTH" value="ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS + 5"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigALLOW_SOCKET_SEND_WITHOUT_BIND" value="config.aws.freertosplus.freertosplus_tcp.ipconfigALLOW_SOCKET_SEND_WITHOUT_BIND.0"/>
@@ -671,7 +671,7 @@
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigTCP_KEEP_ALIVE" value="config.aws.freertosplus.freertosplus_tcp.ipconfigTCP_KEEP_ALIVE.1"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigTCP_KEEP_ALIVE_INTERVAL" value="120"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_SEMAPHORE" value="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_SEMAPHORE.0"/>
-      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_WAKE_CALLBACK" value="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_WAKE_CALLBACK.1"/>
+      <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_WAKE_CALLBACK" value="config.aws.freertosplus.freertosplus_tcp.ipconfigSOCKET_HAS_USER_WAKE_CALLBACK.0"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_CALLBACKS" value="config.aws.freertosplus.freertosplus_tcp.ipconfigUSE_CALLBACKS.0"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigZERO_COPY_TX_DRIVER" value="config.aws.freertosplus.freertosplus_tcp.ipconfigZERO_COPY_TX_DRIVER.0"/>
       <property id="config.aws.freertosplus.freertosplus_tcp.ipconfigZERO_COPY_RX_DRIVER" value="config.aws.freertosplus.freertosplus_tcp.ipconfigZERO_COPY_RX_DRIVER.0"/>
@@ -881,7 +881,6 @@
       <configSetting altId="p307.output.high" configurationId="p307"/>
       <configSetting altId="p307.gpio_speed.gpio_speed_high" configurationId="p307.gpio_drivecapacity"/>
       <configSetting altId="p307.gpio_mode.gpio_mode_out.high" configurationId="p307.gpio_mode"/>
-      <configSetting altId="p307.gpio_otype.gpio_otype_n_ch_od" configurationId="p307.gpio_otype"/>
       <configSetting altId="p311.output.high" configurationId="p311"/>
       <configSetting altId="p311.gpio_speed.gpio_speed_high" configurationId="p311.gpio_drivecapacity"/>
       <configSetting altId="p311.gpio_mode.gpio_mode_out.high" configurationId="p311.gpio_mode"/>

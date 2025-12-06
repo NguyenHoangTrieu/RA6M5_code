@@ -6,12 +6,25 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Default IP address configuration */
+#ifndef configIP_ADDR0
+#define configIP_ADDR0 192
+#define configIP_ADDR1 168
+#define configIP_ADDR2 50
+#define configIP_ADDR3 150
+#endif
+
+/*Gateway Config*/
+#define configGATEWAY_ADDR0 192
+#define configGATEWAY_ADDR1 168
+#define configGATEWAY_ADDR2 50
+#define configGATEWAY_ADDR3 1
 
 /* Server configuration */
 #define SERVER_IP_ADDR0 192
 #define SERVER_IP_ADDR1 168
-#define SERVER_IP_ADDR2 1
-#define SERVER_IP_ADDR3 100
+#define SERVER_IP_ADDR2 50
+#define SERVER_IP_ADDR3 11
 #define SERVER_PORT 8888
 
 /* Device name */
@@ -47,34 +60,60 @@ void ether_thread_entry(void *pvParameters) {
   uint32_t ulIPAddress;
 
   uart_print("=== Ethernet Thread Started ===\r\n");
-
   /* Initialize DS1307 RTC */
+  i2c_comms_init(&g_comms_i2c_device_rtc_cfg);
   err = ds1307_init();
   snprintf(uart_msg, sizeof(uart_msg), "[ETHER] DS1307 Init: %s\r\n",
            (err == FSP_SUCCESS ? "OK" : "ERR"));
   uart_print(uart_msg);
 
-// Set initial time (uncomment to set time once)
+  // Set initial time (uncomment to set time once)
 
   rtc_time_t init_time = {
       .seconds = 0,
       .minutes = 30,
       .hours = 14,
-      .day = 1,      // Monday
+      .day = 1, // Monday
       .date = 21,
       .month = 8,
-      .year = 25     // 2025
+      .year = 25 // 2025
   };
   ds1307_set_time(&init_time);
   uart_print("[ETHER] RTC time initialized\r\n");
 
+  R_BSP_PinAccessEnable();
+
+  R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_LOW);
+  R_BSP_SoftwareDelay(50, BSP_DELAY_UNITS_MILLISECONDS);
+  R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_HIGH);
+
+  R_BSP_PinAccessDisable();
+  R_BSP_SoftwareDelay(500, BSP_DELAY_UNITS_MILLISECONDS);
+  uart_print("[PHY] Reset done. Starting IP Stack...\r\n");
+  const uint8_t ucIPAddress[4] = {configIP_ADDR0, configIP_ADDR1,
+                                  configIP_ADDR2, configIP_ADDR3};
+  const uint8_t ucNetMask[4] = {255, 255, 255, 0};
+  const uint8_t ucGatewayAddress[4] = {configGATEWAY_ADDR0, configGATEWAY_ADDR1,
+                                       configGATEWAY_ADDR2,
+                                       configGATEWAY_ADDR3};
+  const uint8_t ucDNSServerAddress[4] = {8, 8, 8, 8};
+  const uint8_t ucMACAddress[6] = {0x74, 0x90, 0x50, 0x10, 0xC5, 0x11};
+  uart_print("[ETHER] Force Initializing Static IP...\r\n");
+  FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
+                  ucMACAddress);
   /* Wait for network to be up */
   uart_print("[ETHER] Waiting for network...\r\n");
   while (FreeRTOS_IsNetworkUp() == pdFALSE) {
+    uart_print("[ETHER] Network down, retrying in 1s...\r\n");
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 
   ulIPAddress = FreeRTOS_GetIPAddress();
+  while (ulIPAddress == 0) {
+    uart_print("[ETHER] Link Up but IP is 0.0.0.0. Waiting for DHCP...\r\n");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ulIPAddress = FreeRTOS_GetIPAddress();
+  }
   snprintf(uart_msg, sizeof(uart_msg),
            "[ETHER] Network UP! IP: %u.%u.%u.%u\r\n",
            (unsigned int)(ulIPAddress & 0xFF),
@@ -121,13 +160,23 @@ void ether_thread_entry(void *pvParameters) {
 
       /* Connected - process sensor data from queue */
       while (1) {
+        if (FreeRTOS_IsNetworkUp() == pdFALSE) {
+          uart_print("[ETHER] Link lost! Closing socket to reconnect...\r\n");
+          break;
+        }
         /* Wait for sensor data from queue */
         if (xQueueReceive(g_sensor_data_queue, &sensor_data,
                           pdMS_TO_TICKS(5000)) == pdPASS) {
 
           /* Read current time from RTC */
           err = ds1307_get_time(&current_time);
-
+          // current_time.seconds = 0;
+          // current_time.minutes = 0;
+          // current_time.hours = 0;
+          // current_time.day = 1;
+          // current_time.date = 1;
+          // current_time.month = 1;
+          // current_time.year = 0;
           if (err == FSP_SUCCESS) {
             /* Format message with timestamp */
             int msg_len = format_sensor_message(msg_buffer, sizeof(msg_buffer),
@@ -167,5 +216,21 @@ void ether_thread_entry(void *pvParameters) {
     FreeRTOS_closesocket(xSocket);
     uart_print("[ETHER] Socket closed, retrying in 5s...\r\n");
     vTaskDelay(pdMS_TO_TICKS(5000));
+  }
+}
+
+void vApplicationIPNetworkEventHook(eIPCallbackEvent_t eNetworkEvent) {
+  uint32_t ulIPAddress, ulNetMask, ulGatewayAddress, ulDNSServerAddress;
+  char cBuffer[32];
+  if (eNetworkEvent == eNetworkUp) {
+    FreeRTOS_GetAddressConfiguration(&ulIPAddress, &ulNetMask,
+                                     &ulGatewayAddress, &ulDNSServerAddress);
+    FreeRTOS_inet_ntoa(ulIPAddress, cBuffer);
+
+    uart_print("[HOOK] Network UP! IP: ");
+    uart_print(cBuffer);
+    uart_print("\r\n");
+  } else {
+    uart_print("[HOOK] Network DOWN!\r\n");
   }
 }

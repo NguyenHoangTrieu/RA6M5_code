@@ -119,7 +119,7 @@ rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus1_extended_cfg =
     .p_driver_instance      = (void*)&RA_NOT_DEFINED,
 #endif
     .p_current_ctrl = NULL,
-    .bus_timeout = 0xFFFFFFFF,
+    .bus_timeout = 500,
 #if BSP_CFG_RTOS
 #if !defined(g_comms_i2c_bus1_blocking_semaphore)
     .p_blocking_semaphore = &g_comms_i2c_bus1_blocking_semaphore,
@@ -146,7 +146,7 @@ rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus1_extended_cfg =
 #undef RA_NOT_DEFINED
 const ether_phy_lsi_cfg_t g_ether_phy_lsi0 =
 {
-    .address           = 0,
+    .address           = 5,
     .type              = ETHER_PHY_LSI_TYPE_KIT_COMPONENT,
 };
 ether_phy_instance_ctrl_t g_ether_phy0_ctrl;
@@ -168,7 +168,7 @@ const ether_phy_cfg_t g_ether_phy0_cfg =
 {
 
     .channel                   = 0,
-    .phy_lsi_address           = 0,
+    .phy_lsi_address           = 5,
     .phy_reset_wait_time       = 0x00020000,
     .mii_bit_access_wait_time  = 8,
     .phy_lsi_type              = ETHER_PHY_LSI_TYPE_KIT_COMPONENT,
@@ -187,7 +187,7 @@ const ether_phy_instance_t g_ether_phy0 =
 };
 ether_instance_ctrl_t g_ether0_ctrl;
 
-            uint8_t g_ether0_mac_address[6] = { 0x00,0x11,0x22,0x33,0x44,0x55 };
+            uint8_t g_ether0_mac_address[6] = { 0x74,0x90,0x50,0x10,0xC5,0x11 };
 
             __attribute__((__aligned__(16))) ether_instance_descriptor_t g_ether0_tx_descriptors[1] ETHER_BUFFER_PLACE_IN_SECTION;
             __attribute__((__aligned__(16))) ether_instance_descriptor_t g_ether0_rx_descriptors[1] ETHER_BUFFER_PLACE_IN_SECTION;

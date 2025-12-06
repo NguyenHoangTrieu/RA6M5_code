@@ -98,7 +98,7 @@ FSP Configuration
   RA6M5 event data
   RA Common
     Main stack size (bytes): 0x400
-    Heap size (bytes): 0x400
+    Heap size (bytes): 0x5000
     Bootloader Secondary XIP: Disabled
     MCU Vcc (mV): 3300
     Parameter checking: Disabled
@@ -201,7 +201,7 @@ FSP Configuration
       P304 82 - - - - Disabled - - "AGT2: AGTEE2; BUS_ASYNCH0: A09; GPT_OPS0: GTOWLO; GPT7: GTIOC7A; ICU0: IRQ09; SCI6: RXD6; SCI6: SCL6" - None - - 
       P305 81 - - - - Disabled - - "AGT2: AGTOB2; BUS_ASYNCH0: A10; GPT_OPS0: GTOWUP; ICU0: IRQ08; QSPI0: QSPCLK; SCI6: SDA6; SCI6: TXD6" - None - - 
       P306 80 GPIO ZMOD4510_RESET High - "Output mode (Initial High)" "n-ch open drain" - "AGT2: AGTOA2; BUS_ASYNCH0: A11; GPT_OPS0: GTOULO; QSPI0: QSSL; SCI6: SCK6" - IO - - 
-      P307 79 GPIO ZMOD4410_RESET High - "Output mode (Initial High)" "n-ch open drain" - "AGT4: AGTEE4; BUS_ASYNCH0: A12; GPT_OPS0: GTOUUP; QSPI0: QIO0; SCI6: CTSRTS6" - IO - - 
+      P307 79 GPIO ZMOD4410_RESET High - "Output mode (Initial High)" CMOS - "AGT4: AGTEE4; BUS_ASYNCH0: A12; GPT_OPS0: GTOUUP; QSPI0: QIO0; SCI6: CTSRTS6" - IO - - 
       P308 78 - - - - Disabled - - "AGT4: AGTOB4; BUS_ASYNCH0: A13; QSPI0: QIO1; SCI3: CTS3; SCI6: CTS6" - None - - 
       P309 77 - - - - Disabled - - "AGT4: AGTOA4; BUS_ASYNCH0: A14; QSPI0: QIO2; SCI3: RXD3; SCI3: SCL3" - None - - 
       P310 76 - - - - Disabled - - "AGT1: AGTEE1; BUS_ASYNCH0: A15; QSPI0: QIO3; SCI3: SDA3; SCI3: TXD3" - None - - 
@@ -541,7 +541,7 @@ FSP Configuration
     KSZ8091RNB Target: Disabled
     KSZ8041 Target: Disabled
     DP83620 Target: Disabled
-    ICS1894 Target: Disabled
+    ICS1894 Target: Enabled
     User Own Target: Disabled
     Reference Clock: Default
     Automatic PHY-LSI Initialization: Enabled
@@ -551,7 +551,7 @@ FSP Configuration
     KSZ8091RNB Target: Disabled
     KSZ8041 Target: Disabled
     DP83620 Target: Disabled
-    ICS1894 Target: Disabled
+    ICS1894 Target: Enabled
     User Own Target: Disabled
     Reference Clock: Default
     Automatic PHY-LSI Initialization: Enabled
@@ -571,7 +571,7 @@ FSP Configuration
     Stack size in words (not bytes): configMINIMAL_STACK_SIZE * 5
     Network Events call vApplicationIPNetworkEventHook: Enable 
     Max UDP send block time: 15000 / portTICK_PERIOD_MS
-    Use DHCP: Enable 
+    Use DHCP: Disable
     DHCP Register Hostname: Enable 
     DHCP Uses Unicast: Enable 
     DHCP callback function: Disable
@@ -579,7 +579,7 @@ FSP Configuration
     ARP Cache Entries: 6
     ARP Request Retransmissions: 5
     Maximum time before ARP table entry becomes stale: 150
-    Use string for IP Address: Enable 
+    Use string for IP Address: Disable
     Total number of available network buffers: 10
     Set the maximum number of events: ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS + 5
     Enable FreeRTOS_sendto() without calling Bind: Disable
@@ -601,7 +601,7 @@ FSP Configuration
     TCP keep-alive: Enable 
     TCP keep-alive interval: 120
     The socket semaphore to unblock the MQTT task (USER_SEMAPHORE): Disable
-    The socket semaphore to unblock the MQTT task (WAKE_CALLBACK): Enable 
+    The socket semaphore to unblock the MQTT task (WAKE_CALLBACK): Disable
     The socket semaphore  to unblock the MQTT task (USE_CALLBACKS): Disable
     The socket semaphore to unblock the MQTT task (TX_DRIVER): Disable
     The socket semaphore to unblock the MQTT task (RX_DRIVER): Disable
@@ -633,7 +633,7 @@ FSP Configuration
     General: Use Mutexes: Enabled
     General: Use Recursive Mutexes: Enabled
     General: Use Counting Semaphores: Enabled
-    Hooks: Check For Stack Overflow: Disabled
+    Hooks: Check For Stack Overflow: Enabled
     General: Queue Registry Size: 10
     General: Use Queue Sets: Disabled
     General: Use Time Slicing: Disabled
@@ -700,18 +700,18 @@ FSP Configuration
   Thread "Sensor Thread"
     Symbol: sensor_thread
     Name: Sensor Thread
-    Stack size (bytes): 2048
+    Stack size (bytes): 8192
     Priority: 4
     Thread Context: NULL
     Memory Allocation: Static
     Allocate Secure Context: Enable
     
-    Instance "g_zmod_comms_i2c I2C Communication Device (rm_comms_i2c)"
-      Name: g_zmod_comms_i2c
+    Instance "g_biomet_comms_i2c I2C Communication Device (rm_comms_i2c)"
+      Name: g_biomet_comms_i2c
       Semaphore Timeout (RTOS only): 500
-      Slave Address: 0x32
+      Slave Address: 0x53
       Address Mode: 7-Bit
-      Callback: zmod_comms_i2c_callback
+      Callback: biomet_comms_i2c_callback
       
       Instance "g_comms_i2c_bus0 I2C Shared Bus (rm_comms_i2c)"
         Name: g_comms_i2c_bus0
@@ -808,7 +808,7 @@ FSP Configuration
   Thread "Ethernet Thread"
     Symbol: ether_thread
     Name: Ethernet Thread
-    Stack size (bytes): 2048
+    Stack size (bytes): 8912
     Priority: 3
     Thread Context: NULL
     Memory Allocation: Static
@@ -826,7 +826,7 @@ FSP Configuration
         Instance "g_ether0 Ethernet (r_ether)"
           General: Name: g_ether0
           General: Channel: 0
-          General: MAC address: 00:11:22:33:44:55
+          General: MAC address: 74:90:50:10:C5:11
           General: Zero-copy Mode: Disable
           General: Flow control functionality: Disable
           Filters: Multicast Mode: Enable
@@ -846,7 +846,7 @@ FSP Configuration
           Instance "g_ether_phy0 Ethernet (r_ether_phy)"
             Name: g_ether_phy0
             Channel: 0
-            PHY-LSI Address: 0
+            PHY-LSI Address: 5
             Default PHY-LSI port: 0
             PHY-LSI Reset Completion Timeout: 0x00020000
             Select MII type: RMII
@@ -858,21 +858,21 @@ FSP Configuration
             
             Instance "g_ether_phy_lsi0 Ethernet PHY-LSI"
               Name: g_ether_phy_lsi0
-              PHY-LSI Address: 0
+              PHY-LSI Address: 5
               PHY-LSI type: Kit Component
               
         Instance "FreeRTOS Buffer Allocation 2"
     Instance "FreeRTOS Heap 4"
     Instance "g_comms_i2c_device_rtc I2C Communication Device (rm_comms_i2c)"
       Name: g_comms_i2c_device_rtc
-      Semaphore Timeout (RTOS only): 0xFFFFFFFF
-      Slave Address: 0x00
+      Semaphore Timeout (RTOS only): 500
+      Slave Address: 0x63
       Address Mode: 7-Bit
       Callback: comms_i2c_callback
       
       Instance "g_comms_i2c_bus1 I2C Shared Bus (rm_comms_i2c)"
         Name: g_comms_i2c_bus1
-        Bus Timeout: 0xFFFFFFFF
+        Bus Timeout: 500
         Semaphore for Blocking (RTOS only): Use
         Recursive Mutex for Bus (RTOS only): Use
         Channel: 1
