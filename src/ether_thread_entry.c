@@ -24,7 +24,7 @@
 #define SERVER_IP_ADDR0 192
 #define SERVER_IP_ADDR1 168
 #define SERVER_IP_ADDR2 1
-#define SERVER_IP_ADDR3 8
+#define SERVER_IP_ADDR3 9
 #define SERVER_PORT 8888
 
 /* Device name */

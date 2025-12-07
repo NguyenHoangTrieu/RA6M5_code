@@ -329,11 +329,11 @@
       <property id="module.driver.comms_i2c_bus.rate" value="module.driver.comms_i2c_bus.rate.rate_standard"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1982412110">
-      <property id="module.driver.comms_i2c_device.name" value="g_biomet_comms_i2c"/>
+      <property id="module.driver.comms_i2c_device.name" value="g_hs_comms_i2c"/>
       <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
-      <property id="module.driver.comms_i2c_device.slave_address" value="0x53"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x44"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
-      <property id="module.driver.comms_i2c_device.p_callback" value="biomet_comms_i2c_callback"/>
+      <property id="module.driver.comms_i2c_device.p_callback" value="hs_comms_i2c_callback"/>
     </module>
     <module id="module.driver.comms_i2c_on_comms_i2c_device.1613965759">
       <property id="module.driver.comms_i2c_device.name" value="g_icp_comms_i2c"/>

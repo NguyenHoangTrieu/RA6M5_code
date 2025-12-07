@@ -238,22 +238,22 @@ const rm_comms_instance_t g_icp_comms_i2c =
     .p_api  = &g_comms_on_comms_i2c,
 };
 /* I2C Communication Device */
-rm_comms_i2c_instance_ctrl_t g_biomet_comms_i2c_ctrl;
+rm_comms_i2c_instance_ctrl_t g_hs_comms_i2c_ctrl;
 
 /* Lower level driver configuration */
-const i2c_master_cfg_t g_biomet_comms_i2c_lower_level_cfg =
+const i2c_master_cfg_t g_hs_comms_i2c_lower_level_cfg =
 {
-    .slave = 0x53,
+    .slave = 0x44,
     .addr_mode = I2C_MASTER_ADDR_MODE_7BIT,
     .p_callback = rm_comms_i2c_callback,
 };
 
-const rm_comms_cfg_t g_biomet_comms_i2c_cfg =
+const rm_comms_cfg_t g_hs_comms_i2c_cfg =
 {
     .semaphore_timeout  = 500,
-    .p_lower_level_cfg  = (void*)&g_biomet_comms_i2c_lower_level_cfg,
+    .p_lower_level_cfg  = (void*)&g_hs_comms_i2c_lower_level_cfg,
     .p_extend           = (void*)&g_comms_i2c_bus0_extended_cfg,
-    .p_callback         = biomet_comms_i2c_callback,
+    .p_callback         = hs_comms_i2c_callback,
 #if defined(NULL)
     .p_context          = NULL,
 #else
@@ -261,10 +261,10 @@ const rm_comms_cfg_t g_biomet_comms_i2c_cfg =
 #endif
 };
 
-const rm_comms_instance_t g_biomet_comms_i2c =
+const rm_comms_instance_t g_hs_comms_i2c =
 {
-    .p_ctrl = &g_biomet_comms_i2c_ctrl,
-    .p_cfg  = &g_biomet_comms_i2c_cfg,
+    .p_ctrl = &g_hs_comms_i2c_ctrl,
+    .p_cfg  = &g_hs_comms_i2c_cfg,
     .p_api  = &g_comms_on_comms_i2c,
 };
 extern uint32_t g_fsp_common_thread_count;

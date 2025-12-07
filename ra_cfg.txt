@@ -706,12 +706,12 @@ FSP Configuration
     Memory Allocation: Static
     Allocate Secure Context: Enable
     
-    Instance "g_biomet_comms_i2c I2C Communication Device (rm_comms_i2c)"
-      Name: g_biomet_comms_i2c
+    Instance "g_hs_comms_i2c I2C Communication Device (rm_comms_i2c)"
+      Name: g_hs_comms_i2c
       Semaphore Timeout (RTOS only): 500
-      Slave Address: 0x53
+      Slave Address: 0x44
       Address Mode: 7-Bit
-      Callback: biomet_comms_i2c_callback
+      Callback: hs_comms_i2c_callback
       
       Instance "g_comms_i2c_bus0 I2C Shared Bus (rm_comms_i2c)"
         Name: g_comms_i2c_bus0
