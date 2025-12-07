@@ -1,6 +1,6 @@
 #include "blinky_thread.h"
+#include "hs3001_handler.h"
 #include "icp_handler.h"
-#include "ob1203_handler.h"
 #include "sensor_data_queue.h"
 #include "sensor_thread.h"
 #include <stdio.h>
@@ -8,7 +8,7 @@
 
 extern bsp_leds_t g_bsp_leds;
 extern rm_comms_i2c_instance_ctrl_t g_icp_comms_i2c_ctrl;
-extern rm_comms_i2c_instance_ctrl_t g_biomet_comms_i2c_ctrl;
+extern rm_comms_i2c_instance_ctrl_t g_hs_comms_i2c_ctrl;
 volatile uint8_t i2c_flag = 0;
 
 void i2c_comms_init(rm_comms_cfg_t *p_cfg) {
@@ -52,8 +52,8 @@ void uart_print(const char *msg) {
 }
 
 /* Callback used only for I2C scan */
-extern const rm_comms_cfg_t g_biomet_comms_i2c_cfg;
-extern const i2c_master_cfg_t g_biomet_comms_i2c_lower_level_cfg;
+extern const rm_comms_cfg_t g_hs_comms_i2c_cfg;
+extern const i2c_master_cfg_t g_hs_comms_i2c_lower_level_cfg;
 
 static volatile uint8_t g_scan_done = 0;
 static volatile rm_comms_event_t g_scan_event = 0;
@@ -78,11 +78,11 @@ void i2c_scan_bus0(void) {
     memset(&scan_ctrl, 0, sizeof(scan_ctrl));
 
     /* Copy lower-level I2C config (channel, pins, speed...) from */
-    i2c_master_cfg_t lower_cfg = g_biomet_comms_i2c_lower_level_cfg;
+    i2c_master_cfg_t lower_cfg = g_hs_comms_i2c_lower_level_cfg;
     lower_cfg.slave = addr; /* try this 7-bit address */
 
     /* Copy rm_comms config, but override lower-level cfg + callback */
-    rm_comms_cfg_t scan_cfg = g_biomet_comms_i2c_cfg;
+    rm_comms_cfg_t scan_cfg = g_hs_comms_i2c_cfg;
     scan_cfg.p_lower_level_cfg = &lower_cfg;
     scan_cfg.p_callback = i2c_scan_callback;
 
@@ -138,15 +138,7 @@ void sensor_thread_entry(void *pvParameters) {
            free_heap);
   uart_print(uart_msg);
   // Open/init I2C and ICP
-  i2c_comms_init(&g_biomet_comms_i2c_cfg);
-  R_BSP_PinAccessEnable();
-  R_BSP_PinWrite(ZMOD4510_RESET, BSP_IO_LEVEL_LOW);
-  R_BSP_PinWrite(ZMOD4410_RESET, BSP_IO_LEVEL_LOW);
-  vTaskDelay(pdMS_TO_TICKS(100));
-  R_BSP_PinWrite(ZMOD4510_RESET, BSP_IO_LEVEL_HIGH);
-  R_BSP_PinWrite(ZMOD4410_RESET, BSP_IO_LEVEL_HIGH);
-  vTaskDelay(pdMS_TO_TICKS(100));
-  R_BSP_PinAccessDisable();
+  i2c_comms_init(&g_icp_comms_i2c_cfg);
   i2c_scan_bus0();
   err = icp10101_init();
   snprintf(uart_msg, sizeof(uart_msg), "ICP I2C Open: %s\r\n",
@@ -176,30 +168,11 @@ void sensor_thread_entry(void *pvParameters) {
            g_icp_calib.otp[0], g_icp_calib.otp[1], g_icp_calib.otp[2],
            g_icp_calib.otp[3]);
   uart_print(uart_msg);
-
-  /* === Initialize OB1203 biometric sensor === */
-  err = ob1203_init();
-  snprintf(uart_msg, sizeof(uart_msg), "OB1203 I2C Open: %s\r\n",
+  /* === Initialize HS3001 humidity/temperature sensor === */
+  err = hs3001_init();
+  snprintf(uart_msg, sizeof(uart_msg), "HS3001 I2C Open: %s\r\n",
            (err == FSP_SUCCESS ? "OK" : "ERR"));
   uart_print(uart_msg);
-  /* Configure OB1203 PPG (example settings) */
-  ob1203_config_t ob_cfg = {
-      .ir_led_current = 32, /* Adjust LED currents as needed */
-      .red_led_current = 32,
-      .averaging = 16 /* 16x averaging */
-  };
-
-  err = ob1203_configure(&ob_cfg);
-  snprintf(uart_msg, sizeof(uart_msg), "OB1203 Configure: %s\r\n",
-           (err == FSP_SUCCESS ? "OK" : "ERR"));
-  uart_print(uart_msg);
-
-  if (FSP_SUCCESS == err) {
-    err = ob1203_start_measurement();
-    snprintf(uart_msg, sizeof(uart_msg), "OB1203 Start: %s\r\n",
-             (err == FSP_SUCCESS ? "OK" : "ERR"));
-    uart_print(uart_msg);
-  }
 
   // Measurement loop (Low Noise Mode, API mới)
   uint32_t loop_count = 0;
@@ -231,49 +204,38 @@ void sensor_thread_entry(void *pvParameters) {
     }
     vTaskDelay(pdMS_TO_TICKS(100));
 
-    /* Read OB1203 - process multiple samples */
-    ob1203_data_t ob_data;
-    fsp_err_t ob_err;
+    /* Read HS3001 humidity + temperature */
+    float humidity_rh = 0.0f;
+    float hs_temp_c = 0.0f;
 
-    memset(&ob_data, 0, sizeof(ob_data));
+    err = hs3001_read(&humidity_rh, &hs_temp_c);
 
-    /* Read one IR + RED sample from OB1203 FIFO */
-    ob_err = ob1203_read(&ob_data);
-
-    /* Always print something so we can see what happens */
     snprintf(uart_msg, sizeof(uart_msg),
-             "[OB1203] read: err=%d, valid=%u, IR=%lu, RED=%lu\r\n",
-             (int)ob_err, (unsigned int)ob_data.valid,
-             (unsigned long)ob_data.ir_raw, (unsigned long)ob_data.red_raw);
+             "[HS3001] read: err=%d, RH=%.2f %%RH, T=%.2f C\r\n", (int)err,
+             humidity_rh, hs_temp_c);
     uart_print(uart_msg);
 
-    if ((ob_err == FSP_SUCCESS) && (ob_data.valid == 1U)) {
+    if (FSP_SUCCESS == err) {
       /* Prepare sensor data structure for queue */
       memset(&sensor_data, 0, sizeof(sensor_data_t));
       snprintf(sensor_data.sensor_name, sizeof(sensor_data.sensor_name),
-               "ob1203");
+               "hs3001");
 
-      /* Map OB1203 results to generic sensor data fields */
-      sensor_data.value1 = ob_data.heart_rate_bpm; /* Heart rate */
-      sensor_data.value2 = ob_data.spo2_percent;   /* SpO2 */
+      /* Map HS3001 results to generic sensor data fields */
+      sensor_data.value1 = humidity_rh; /* Relative humidity */
+      sensor_data.value2 = hs_temp_c;   /* Temperature */
 
-      snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "bpm");
-      snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "%%SpO2");
+      snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "%%RH");
+      snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "C");
 
       /* Send to queue (non-blocking) */
       if (internet_connected) {
         if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) !=
             pdPASS) {
-          uart_print("WARN: OB1203 queue full, data dropped\r\n");
+          uart_print("WARN: HS3001 queue full, data dropped\r\n");
         }
       }
-      /* High-level debug log */
-      snprintf(uart_msg, sizeof(uart_msg),
-               "OB1203: HR=%.1f bpm, SpO2=%.1f %%\r\n", ob_data.heart_rate_bpm,
-               ob_data.spo2_percent);
-      uart_print(uart_msg);
     }
-
     // Blink LED
     R_BSP_PinAccessEnable();
     R_BSP_PinWrite(g_bsp_leds.p_leds[0], pin_level);
