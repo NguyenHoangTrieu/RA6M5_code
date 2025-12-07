@@ -22,6 +22,7 @@ extern QueueHandle_t g_sensor_data_queue;
 #define SENSOR_QUEUE_ITEM_SIZE  sizeof(sensor_data_t)
 
 /* Function to create queue */
+extern bool internet_connected;
 void sensor_queue_create(void);
 void uart_print(const char *msg);
 #endif /* SENSOR_DATA_QUEUE_H_ */

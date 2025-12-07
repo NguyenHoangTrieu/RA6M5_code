@@ -147,7 +147,7 @@ rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus1_extended_cfg =
 const ether_phy_lsi_cfg_t g_ether_phy_lsi0 =
 {
     .address           = 5,
-    .type              = ETHER_PHY_LSI_TYPE_KIT_COMPONENT,
+    .type              = ETHER_PHY_LSI_TYPE_ICS1894,
 };
 ether_phy_instance_ctrl_t g_ether_phy0_ctrl;
 #define RA_NOT_DEFINED (1)
@@ -171,7 +171,7 @@ const ether_phy_cfg_t g_ether_phy0_cfg =
     .phy_lsi_address           = 5,
     .phy_reset_wait_time       = 0x00020000,
     .mii_bit_access_wait_time  = 8,
-    .phy_lsi_type              = ETHER_PHY_LSI_TYPE_KIT_COMPONENT,
+    .phy_lsi_type              = ETHER_PHY_LSI_TYPE_ICS1894,
     .flow_control              = ETHER_PHY_FLOW_CONTROL_DISABLE,
     .mii_type                  = ETHER_PHY_MII_TYPE_RMII,
     .p_context                 = NULL,

@@ -1,5 +1,5 @@
 #include "sensor_data_queue.h"
-
+bool internet_connected = false;
 /* Queue handle */
 QueueHandle_t g_sensor_data_queue = NULL;
 

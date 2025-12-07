@@ -408,7 +408,7 @@
       <property id="module.driver.ether_phy.default_phy_lsi_port" value="module.driver.ether_phy.default_phy_lsi_port.0"/>
       <property id="module.driver.ether_phy.phy_reset_wait_time" value="0x00020000"/>
       <property id="module.driver.ether_phy.mii_type" value="module.driver.mii_type.rmii"/>
-      <property id="module.driver.ether_phy.phy_lsi_type" value="module.driver.ether_phy.phy_lsi_type.kit_component"/>
+      <property id="module.driver.ether_phy.phy_lsi_type" value="module.driver.ether_phy.phy_lsi_type.ics1894"/>
       <property id="module.driver.ether_phy.target_init" value="NULL"/>
       <property id="module.driver.ether_phy.target_link_partner_ability_get" value="NULL"/>
       <property id="module.driver.ether_phy.mii_bit_access_wait_time" value="8"/>
@@ -417,7 +417,7 @@
     <module id="module.driver.ether_phy_lsi_on_ether_phy.1209824302">
       <property id="module.driver.ether_phy_lsi.name" value="g_ether_phy_lsi0"/>
       <property id="module.driver.ether_phy_lsi.phy_lsi_address" value="5"/>
-      <property id="module.driver.ether_phy_lsi.phy_lsi_type" value="module.driver.ether_phy_lsi.phy_lsi_type.kit_component"/>
+      <property id="module.driver.ether_phy_lsi.phy_lsi_type" value="module.driver.ether_phy_lsi.phy_lsi_type.ics1894"/>
     </module>
     <module id="module.aws.freertosplus.freertosplus_tcp.136231586"/>
     <module id="module.driver.freertos_plus_tcp_on_ether.343899081">
@@ -433,7 +433,7 @@
     <module id="module.driver.comms_i2c_on_comms_i2c_device.931771512">
       <property id="module.driver.comms_i2c_device.name" value="g_comms_i2c_device_rtc"/>
       <property id="module.driver.comms_i2c_device.semaphore_timeout" value="500"/>
-      <property id="module.driver.comms_i2c_device.slave_address" value="0x63"/>
+      <property id="module.driver.comms_i2c_device.slave_address" value="0x68"/>
       <property id="module.driver.comms_i2c_device.address_mode" value="module.driver.comms_i2c_device.address_mode.address_mode_7bit"/>
       <property id="module.driver.comms_i2c_device.p_callback" value="comms_i2c_callback"/>
     </module>
@@ -881,6 +881,7 @@
       <configSetting altId="p307.output.high" configurationId="p307"/>
       <configSetting altId="p307.gpio_speed.gpio_speed_high" configurationId="p307.gpio_drivecapacity"/>
       <configSetting altId="p307.gpio_mode.gpio_mode_out.high" configurationId="p307.gpio_mode"/>
+      <configSetting altId="p307.gpio_otype.gpio_otype_n_ch_od" configurationId="p307.gpio_otype"/>
       <configSetting altId="p311.output.high" configurationId="p311"/>
       <configSetting altId="p311.gpio_speed.gpio_speed_high" configurationId="p311.gpio_drivecapacity"/>
       <configSetting altId="p311.gpio_mode.gpio_mode_out.high" configurationId="p311.gpio_mode"/>

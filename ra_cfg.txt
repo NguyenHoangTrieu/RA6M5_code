@@ -201,7 +201,7 @@ FSP Configuration
       P304 82 - - - - Disabled - - "AGT2: AGTEE2; BUS_ASYNCH0: A09; GPT_OPS0: GTOWLO; GPT7: GTIOC7A; ICU0: IRQ09; SCI6: RXD6; SCI6: SCL6" - None - - 
       P305 81 - - - - Disabled - - "AGT2: AGTOB2; BUS_ASYNCH0: A10; GPT_OPS0: GTOWUP; ICU0: IRQ08; QSPI0: QSPCLK; SCI6: SDA6; SCI6: TXD6" - None - - 
       P306 80 GPIO ZMOD4510_RESET High - "Output mode (Initial High)" "n-ch open drain" - "AGT2: AGTOA2; BUS_ASYNCH0: A11; GPT_OPS0: GTOULO; QSPI0: QSSL; SCI6: SCK6" - IO - - 
-      P307 79 GPIO ZMOD4410_RESET High - "Output mode (Initial High)" CMOS - "AGT4: AGTEE4; BUS_ASYNCH0: A12; GPT_OPS0: GTOUUP; QSPI0: QIO0; SCI6: CTSRTS6" - IO - - 
+      P307 79 GPIO ZMOD4410_RESET High - "Output mode (Initial High)" "n-ch open drain" - "AGT4: AGTEE4; BUS_ASYNCH0: A12; GPT_OPS0: GTOUUP; QSPI0: QIO0; SCI6: CTSRTS6" - IO - - 
       P308 78 - - - - Disabled - - "AGT4: AGTOB4; BUS_ASYNCH0: A13; QSPI0: QIO1; SCI3: CTS3; SCI6: CTS6" - None - - 
       P309 77 - - - - Disabled - - "AGT4: AGTOA4; BUS_ASYNCH0: A14; QSPI0: QIO2; SCI3: RXD3; SCI3: SCL3" - None - - 
       P310 76 - - - - Disabled - - "AGT1: AGTEE1; BUS_ASYNCH0: A15; QSPI0: QIO3; SCI3: SDA3; SCI3: TXD3" - None - - 
@@ -850,7 +850,7 @@ FSP Configuration
             Default PHY-LSI port: 0
             PHY-LSI Reset Completion Timeout: 0x00020000
             Select MII type: RMII
-            PHY-LSI type: Kit Component
+            PHY-LSI type: ICS1894
             Port Custom Init Function: NULL
             Port Custom Link Partner Ability Get Function: NULL
             MII/RMII Register Access Wait-time: 8
@@ -859,14 +859,14 @@ FSP Configuration
             Instance "g_ether_phy_lsi0 Ethernet PHY-LSI"
               Name: g_ether_phy_lsi0
               PHY-LSI Address: 5
-              PHY-LSI type: Kit Component
+              PHY-LSI type: ICS1894
               
         Instance "FreeRTOS Buffer Allocation 2"
     Instance "FreeRTOS Heap 4"
     Instance "g_comms_i2c_device_rtc I2C Communication Device (rm_comms_i2c)"
       Name: g_comms_i2c_device_rtc
       Semaphore Timeout (RTOS only): 500
-      Slave Address: 0x63
+      Slave Address: 0x68
       Address Mode: 7-Bit
       Callback: comms_i2c_callback
       

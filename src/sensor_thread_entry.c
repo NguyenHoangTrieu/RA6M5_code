@@ -139,6 +139,14 @@ void sensor_thread_entry(void *pvParameters) {
   uart_print(uart_msg);
   // Open/init I2C and ICP
   i2c_comms_init(&g_biomet_comms_i2c_cfg);
+  R_BSP_PinAccessEnable();
+  R_BSP_PinWrite(ZMOD4510_RESET, BSP_IO_LEVEL_LOW);
+  R_BSP_PinWrite(ZMOD4410_RESET, BSP_IO_LEVEL_LOW);
+  vTaskDelay(pdMS_TO_TICKS(100));
+  R_BSP_PinWrite(ZMOD4510_RESET, BSP_IO_LEVEL_HIGH);
+  R_BSP_PinWrite(ZMOD4410_RESET, BSP_IO_LEVEL_HIGH);
+  vTaskDelay(pdMS_TO_TICKS(100));
+  R_BSP_PinAccessDisable();
   i2c_scan_bus0();
   err = icp10101_init();
   snprintf(uart_msg, sizeof(uart_msg), "ICP I2C Open: %s\r\n",
@@ -176,8 +184,8 @@ void sensor_thread_entry(void *pvParameters) {
   uart_print(uart_msg);
   /* Configure OB1203 PPG (example settings) */
   ob1203_config_t ob_cfg = {
-      .ir_led_current = 64, /* Adjust LED currents as needed */
-      .red_led_current = 64,
+      .ir_led_current = 32, /* Adjust LED currents as needed */
+      .red_led_current = 32,
       .averaging = 16 /* 16x averaging */
   };
 
@@ -210,62 +218,60 @@ void sensor_thread_entry(void *pvParameters) {
       snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "C");
 
       // Send to queue
-      if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) !=
-          pdPASS) {
-        uart_print("WARN: Queue full, data dropped\r\n");
+      if (internet_connected) {
+        if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) !=
+            pdPASS) {
+          uart_print("WARN: Queue full, data dropped\r\n");
+        }
       }
       snprintf(uart_msg, sizeof(uart_msg),
                "Loop %lu: Pressure: %.2f Pa, Temp: %.2f C [%s]\r\n", loop_count,
                pressure, temp, err == FSP_SUCCESS ? "OK" : "ERR");
       uart_print(uart_msg);
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     /* Read OB1203 - process multiple samples */
-    for (uint8_t i = 0; i < 5; i++) {
-      ob1203_data_t ob_data;
-      fsp_err_t ob_err;
+    ob1203_data_t ob_data;
+    fsp_err_t ob_err;
 
-      memset(&ob_data, 0, sizeof(ob_data));
+    memset(&ob_data, 0, sizeof(ob_data));
 
-      /* Read one IR + RED sample from OB1203 FIFO */
-      ob_err = ob1203_read(&ob_data);
+    /* Read one IR + RED sample from OB1203 FIFO */
+    ob_err = ob1203_read(&ob_data);
 
-      /* Always print something so we can see what happens */
-      snprintf(uart_msg, sizeof(uart_msg),
-               "[OB1203] read: err=%d, valid=%u, IR=%lu, RED=%lu\r\n",
-               (int)ob_err, (unsigned int)ob_data.valid,
-               (unsigned long)ob_data.ir_raw, (unsigned long)ob_data.red_raw);
-      uart_print(uart_msg);
+    /* Always print something so we can see what happens */
+    snprintf(uart_msg, sizeof(uart_msg),
+             "[OB1203] read: err=%d, valid=%u, IR=%lu, RED=%lu\r\n",
+             (int)ob_err, (unsigned int)ob_data.valid,
+             (unsigned long)ob_data.ir_raw, (unsigned long)ob_data.red_raw);
+    uart_print(uart_msg);
 
-      if ((ob_err == FSP_SUCCESS) && (ob_data.valid == 1U)) {
-        /* Prepare sensor data structure for queue */
-        memset(&sensor_data, 0, sizeof(sensor_data_t));
-        snprintf(sensor_data.sensor_name, sizeof(sensor_data.sensor_name),
-                 "ob1203");
+    if ((ob_err == FSP_SUCCESS) && (ob_data.valid == 1U)) {
+      /* Prepare sensor data structure for queue */
+      memset(&sensor_data, 0, sizeof(sensor_data_t));
+      snprintf(sensor_data.sensor_name, sizeof(sensor_data.sensor_name),
+               "ob1203");
 
-        /* Map OB1203 results to generic sensor data fields */
-        sensor_data.value1 = ob_data.heart_rate_bpm; /* Heart rate */
-        sensor_data.value2 = ob_data.spo2_percent;   /* SpO2 */
+      /* Map OB1203 results to generic sensor data fields */
+      sensor_data.value1 = ob_data.heart_rate_bpm; /* Heart rate */
+      sensor_data.value2 = ob_data.spo2_percent;   /* SpO2 */
 
-        snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "bpm");
-        snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "%%SpO2");
+      snprintf(sensor_data.unit1, sizeof(sensor_data.unit1), "bpm");
+      snprintf(sensor_data.unit2, sizeof(sensor_data.unit2), "%%SpO2");
 
-        /* Send to queue (non-blocking) */
+      /* Send to queue (non-blocking) */
+      if (internet_connected) {
         if (xQueueSend(g_sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) !=
             pdPASS) {
           uart_print("WARN: OB1203 queue full, data dropped\r\n");
         }
-
-        /* High-level debug log */
-        snprintf(uart_msg, sizeof(uart_msg),
-                 "OB1203: HR=%.1f bpm, SpO2=%.1f %%\r\n",
-                 ob_data.heart_rate_bpm, ob_data.spo2_percent);
-        uart_print(uart_msg);
       }
-
-      /* 100 ms between PPG reads */
-      vTaskDelay(pdMS_TO_TICKS(100));
+      /* High-level debug log */
+      snprintf(uart_msg, sizeof(uart_msg),
+               "OB1203: HR=%.1f bpm, SpO2=%.1f %%\r\n", ob_data.heart_rate_bpm,
+               ob_data.spo2_percent);
+      uart_print(uart_msg);
     }
 
     // Blink LED
@@ -276,7 +282,7 @@ void sensor_thread_entry(void *pvParameters) {
         (pin_level == BSP_IO_LEVEL_LOW) ? BSP_IO_LEVEL_HIGH : BSP_IO_LEVEL_LOW;
 
     loop_count++;
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 

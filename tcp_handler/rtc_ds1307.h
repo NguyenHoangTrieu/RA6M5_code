@@ -6,6 +6,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * REAL_RTC = 1  → dùng DS1307 thật qua I2C
+ * REAL_RTC = 0  → dùng soft RTC (software timer 1s, đếm trong RAM)
+ *
+ * Có thể override ở project settings (preprocessor macro) nếu muốn.
+ */
+#ifndef REAL_RTC
+#define REAL_RTC    0
+#endif
+
 /* DS1307 I2C Address */
 #define DS1307_I2C_ADDR         0x68
 
@@ -20,21 +30,22 @@
 #define DS1307_REG_CONTROL      0x07
 
 /* RTC Time Structure */
-typedef struct {
+typedef struct
+{
     uint8_t seconds;    // 0-59
     uint8_t minutes;    // 0-59
     uint8_t hours;      // 0-23
     uint8_t day;        // 1-7 (day of week)
     uint8_t date;       // 1-31
     uint8_t month;      // 1-12
-    uint8_t year;       // 0-99 (last 2 digits)
+    uint8_t year;       // 0-99 (last 2 digits, 20xx)
 } rtc_time_t;
 
-/* Function Prototypes */
+/* Function Prototypes (API giữ nguyên) */
 fsp_err_t ds1307_init(void);
-fsp_err_t ds1307_set_time(rtc_time_t *time);
-fsp_err_t ds1307_get_time(rtc_time_t *time);
-uint8_t bcd_to_dec(uint8_t bcd);
-uint8_t dec_to_bcd(uint8_t dec);
+fsp_err_t ds1307_set_time(rtc_time_t * time);
+fsp_err_t ds1307_get_time(rtc_time_t * time);
+uint8_t  bcd_to_dec(uint8_t bcd);
+uint8_t  dec_to_bcd(uint8_t dec);
 
 #endif /* RTC_DS1307_H_ */

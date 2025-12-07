@@ -10,21 +10,21 @@
 #ifndef configIP_ADDR0
 #define configIP_ADDR0 192
 #define configIP_ADDR1 168
-#define configIP_ADDR2 50
+#define configIP_ADDR2 1
 #define configIP_ADDR3 150
 #endif
 
 /*Gateway Config*/
 #define configGATEWAY_ADDR0 192
 #define configGATEWAY_ADDR1 168
-#define configGATEWAY_ADDR2 50
+#define configGATEWAY_ADDR2 1
 #define configGATEWAY_ADDR3 1
 
 /* Server configuration */
 #define SERVER_IP_ADDR0 192
 #define SERVER_IP_ADDR1 168
-#define SERVER_IP_ADDR2 50
-#define SERVER_IP_ADDR3 11
+#define SERVER_IP_ADDR2 1
+#define SERVER_IP_ADDR3 8
 #define SERVER_PORT 8888
 
 /* Device name */
@@ -33,16 +33,94 @@
 /* Format sensor data with RTC timestamp */
 int format_sensor_message(char *buffer, size_t bufsize, rtc_time_t *rtc_time,
                           sensor_data_t *sensor) {
-  return snprintf(
-      buffer, bufsize,
-      "[20%02d-%02d-%02d %02d:%02d:%02d] dev=%s sensor=%s %s=%.1f%s "
-      "%s=%.0f\r\n",
-      rtc_time->year, rtc_time->month, rtc_time->date, rtc_time->hours,
-      rtc_time->minutes, rtc_time->seconds, DEVICE_NAME, sensor->sensor_name,
-      (strcmp(sensor->sensor_name, "zmod4410") == 0) ? "tvoc" : "pressure",
-      sensor->value1, sensor->unit1,
-      (strcmp(sensor->sensor_name, "zmod4410") == 0) ? "iaq" : "temp",
-      sensor->value2);
+  const char *name1 = "pressure";
+  const char *name2 = "temp";
+
+  if (strcmp(sensor->sensor_name, "zmod4410") == 0) {
+    name1 = "tvoc";
+    name2 = "iaq";
+  } else if (strcmp(sensor->sensor_name, "ob1203") == 0) {
+    name1 = "hr";
+    name2 = "spo2";
+  }
+
+  return snprintf(buffer, bufsize,
+                  "[20%02d-%02d-%02d %02d:%02d:%02d] dev=%s sensor=%s "
+                  "%s=%.1f%s %s=%.0f%s\r\n",
+                  rtc_time->year, rtc_time->month, rtc_time->date,
+                  rtc_time->hours, rtc_time->minutes, rtc_time->seconds,
+                  DEVICE_NAME, sensor->sensor_name, name1, sensor->value1,
+                  sensor->unit1, name2, sensor->value2, sensor->unit2);
+}
+
+/* ===== I2C scan (bus 1 - RTC) ===== */
+extern const rm_comms_cfg_t g_comms_i2c_device_rtc_cfg;
+extern const i2c_master_cfg_t g_comms_i2c_device_rtc_lower_level_cfg;
+extern ether_phy_instance_ctrl_t g_ether_phy0_ctrl;
+
+static volatile uint8_t g_scan_done = 0;
+static volatile rm_comms_event_t g_scan_event = 0;
+
+static void i2c_scan_callback(rm_comms_callback_args_t *p_args) {
+  if (NULL == p_args) {
+    return;
+  }
+
+  g_scan_event = p_args->event;
+  g_scan_done = 1;
+}
+
+/* Scan all 7-bit I2C addresses on the same bus as RTC (bus1) */
+void i2c_scan_bus1(void) {
+  char msg[64];
+
+  uart_print("I2C scan on bus1 start...\r\n");
+
+  for (uint8_t addr = 1; addr < 0x7F; addr++) {
+    /* Local control block for this temporary rm_comms instance */
+    rm_comms_i2c_instance_ctrl_t scan_ctrl;
+    memset(&scan_ctrl, 0, sizeof(scan_ctrl));
+
+    /* Copy lower-level I2C config (channel, pins, speed...) from */
+    i2c_master_cfg_t lower_cfg = g_comms_i2c_device_rtc_lower_level_cfg;
+    lower_cfg.slave = addr; /* try this 7-bit address */
+
+    /* Copy rm_comms config, but override lower-level cfg + callback */
+    rm_comms_cfg_t scan_cfg = g_comms_i2c_device_rtc_cfg;
+    scan_cfg.p_lower_level_cfg = &lower_cfg;
+    scan_cfg.p_callback = i2c_scan_callback;
+
+    /* Open rm_comms instance for this address */
+    fsp_err_t err = RM_COMMS_I2C_Open(&scan_ctrl, &scan_cfg);
+    if (FSP_SUCCESS != err) {
+      /* If open failed for some reason, skip this address */
+      continue;
+    }
+
+    uint8_t dummy = 0;
+    g_scan_done = 0;
+    g_scan_event = (rm_comms_event_t)0xFF;
+
+    /* Simple 1-byte write – if the device NACKs, we will get ERROR */
+    err = RM_COMMS_I2C_Write(&scan_ctrl, &dummy, 1);
+    if (FSP_SUCCESS == err) {
+      /* Wait for callback with a simple timeout */
+      uint32_t timeout = 0U;
+      while (!g_scan_done && timeout++ < 1000000U) {
+        __NOP();
+      }
+
+      if (g_scan_done && (g_scan_event == RM_COMMS_EVENT_OPERATION_COMPLETE)) {
+        /* Device ACKed this address */
+        snprintf(msg, sizeof(msg), "I2C device found at 0x%02X\r\n", addr);
+        uart_print(msg);
+      }
+    }
+
+    (void)RM_COMMS_I2C_Close(&scan_ctrl);
+  }
+
+  uart_print("I2C scan on bus1 done.\r\n");
 }
 
 /* TCP Client task */
@@ -62,6 +140,7 @@ void ether_thread_entry(void *pvParameters) {
   uart_print("=== Ethernet Thread Started ===\r\n");
   /* Initialize DS1307 RTC */
   i2c_comms_init(&g_comms_i2c_device_rtc_cfg);
+  i2c_scan_bus1();
   err = ds1307_init();
   snprintf(uart_msg, sizeof(uart_msg), "[ETHER] DS1307 Init: %s\r\n",
            (err == FSP_SUCCESS ? "OK" : "ERR"));
@@ -101,6 +180,12 @@ void ether_thread_entry(void *pvParameters) {
   uart_print("[ETHER] Force Initializing Static IP...\r\n");
   FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
                   ucMACAddress);
+  fsp_err_t phy_err = R_ETHER_PHY_Write(&g_ether_phy0_ctrl, 0x00, 0x2100);
+  if (phy_err == FSP_SUCCESS) {
+    uart_print("[PHY] Write Success: 100M/Full Duplex Forced.\r\n");
+  } else {
+    uart_print("[PHY] Write Failed!\r\n");
+  }
   /* Wait for network to be up */
   uart_print("[ETHER] Waiting for network...\r\n");
   while (FreeRTOS_IsNetworkUp() == pdFALSE) {
@@ -139,6 +224,7 @@ void ether_thread_entry(void *pvParameters) {
 
     if (xSocket == FREERTOS_INVALID_SOCKET) {
       uart_print("[ETHER] ERR: Socket creation failed\r\n");
+      internet_connected = false;
       vTaskDelay(pdMS_TO_TICKS(5000));
       continue;
     }
@@ -157,11 +243,12 @@ void ether_thread_entry(void *pvParameters) {
 
     if (xStatus == 0) {
       uart_print("[ETHER] Connected to server!\r\n");
-
+      internet_connected = true;
       /* Connected - process sensor data from queue */
       while (1) {
         if (FreeRTOS_IsNetworkUp() == pdFALSE) {
           uart_print("[ETHER] Link lost! Closing socket to reconnect...\r\n");
+          internet_connected = false;
           break;
         }
         /* Wait for sensor data from queue */
