@@ -36,12 +36,12 @@ int format_sensor_message(char *buffer, size_t bufsize, rtc_time_t *rtc_time,
   const char *name1 = "pressure";
   const char *name2 = "temp";
 
-  if (strcmp(sensor->sensor_name, "zmod4410") == 0) {
-    name1 = "tvoc";
-    name2 = "iaq";
-  } else if (strcmp(sensor->sensor_name, "ob1203") == 0) {
-    name1 = "hr";
-    name2 = "spo2";
+  if (strcmp(sensor->sensor_name, "icp10101") == 0) {
+    name1 = "pressure";
+    name2 = "temp";
+  } else if (strcmp(sensor->sensor_name, "hs3001") == 0) {
+    name1 = "humidity";
+    name2 = "temp";
   }
 
   return snprintf(buffer, bufsize,
@@ -180,12 +180,6 @@ void ether_thread_entry(void *pvParameters) {
   uart_print("[ETHER] Force Initializing Static IP...\r\n");
   FreeRTOS_IPInit(ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress,
                   ucMACAddress);
-  fsp_err_t phy_err = R_ETHER_PHY_Write(&g_ether_phy0_ctrl, 0x00, 0x2100);
-  if (phy_err == FSP_SUCCESS) {
-    uart_print("[PHY] Write Success: 100M/Full Duplex Forced.\r\n");
-  } else {
-    uart_print("[PHY] Write Failed!\r\n");
-  }
   /* Wait for network to be up */
   uart_print("[ETHER] Waiting for network...\r\n");
   while (FreeRTOS_IsNetworkUp() == pdFALSE) {
