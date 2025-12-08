@@ -11,18 +11,15 @@
                 #else
                 extern void ether_thread_entry(void * pvParameters);
                 #endif
-#include "r_rtc.h"
-#include "r_rtc_api.h"
+#include "rm_comms_i2c.h"
+#include "rm_comms_api.h"
 FSP_HEADER
-/* RTC Instance. */
-extern const rtc_instance_t g_rtc0;
-
-/** Access the RTC instance using these structures when calling API functions directly (::p_api is not used). */
-extern rtc_instance_ctrl_t g_rtc0_ctrl;
-extern const rtc_cfg_t g_rtc0_cfg;
-
-#ifndef NULL
-void NULL(rtc_callback_args_t * p_args);
+/* I2C Communication Device */
+extern const rm_comms_instance_t g_comms_i2c_device_rtc;
+extern rm_comms_i2c_instance_ctrl_t g_comms_i2c_device_rtc_ctrl;
+extern const rm_comms_cfg_t g_comms_i2c_device_rtc_cfg;
+#ifndef comms_i2c_callback
+void comms_i2c_callback(rm_comms_callback_args_t * p_args);
 #endif
 FSP_FOOTER
 #endif /* ETHER_THREAD_H_ */

@@ -46,11 +46,11 @@ extern const rm_comms_cfg_t g_icp_comms_i2c_cfg;
 void icp_comms_i2c_callback(rm_comms_callback_args_t * p_args);
 #endif
 /* I2C Communication Device */
-extern const rm_comms_instance_t g_zmod_comms_i2c;
-extern rm_comms_i2c_instance_ctrl_t g_zmod_comms_i2c_ctrl;
-extern const rm_comms_cfg_t g_zmod_comms_i2c_cfg;
-#ifndef zmod_comms_i2c_callback
-void zmod_comms_i2c_callback(rm_comms_callback_args_t * p_args);
+extern const rm_comms_instance_t g_hs_comms_i2c;
+extern rm_comms_i2c_instance_ctrl_t g_hs_comms_i2c_ctrl;
+extern const rm_comms_cfg_t g_hs_comms_i2c_cfg;
+#ifndef hs_comms_i2c_callback
+void hs_comms_i2c_callback(rm_comms_callback_args_t * p_args);
 #endif
 FSP_FOOTER
 #endif /* SENSOR_THREAD_H_ */

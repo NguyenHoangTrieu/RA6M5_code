@@ -27,7 +27,7 @@ if errorlevel 1 (
 )
 
 cd ..
-rfp-cli -device RA -t jlink -tool jlink:831351518 -auto -erase -program build/Test_Project.srec -verify
+rfp-cli -device RA -t jlink -tool jlink:831289625 -auto -erase -program build/Test_Project.srec
 
 if errorlevel 1 (
     pause

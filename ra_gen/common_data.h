@@ -3,6 +3,10 @@
 #define COMMON_DATA_H_
 #include <stdint.h>
 #include "bsp_api.h"
+#include "r_iic_master.h"
+#include "r_i2c_master_api.h"
+#include "rm_comms_i2c.h"
+#include "rm_comms_api.h"
 #include "r_ether_phy.h"
 #include "r_ether_phy_api.h"
 #include "r_ether.h"
@@ -10,13 +14,21 @@
 #include "FreeRTOSIPConfig.h"
 #include "rm_freertos_plus_tcp.h"
 #include "FreeRTOS_IP.h"
-#include "r_iic_master.h"
-#include "r_i2c_master_api.h"
-#include "rm_comms_i2c.h"
-#include "rm_comms_api.h"
 #include "r_ioport.h"
 #include "bsp_pin_cfg.h"
 FSP_HEADER
+/* I2C Master on IIC Instance. */
+extern const i2c_master_instance_t g_i2c_master1;
+
+/** Access the I2C Master instance using these structures when calling API functions directly (::p_api is not used). */
+extern iic_master_instance_ctrl_t g_i2c_master1_ctrl;
+extern const i2c_master_cfg_t g_i2c_master1_cfg;
+
+#ifndef rm_comms_i2c_callback
+void rm_comms_i2c_callback(i2c_master_callback_args_t * p_args);
+#endif
+/* I2C Shared Bus */
+extern rm_comms_i2c_bus_extended_cfg_t g_comms_i2c_bus1_extended_cfg;
 #ifndef ETHER_PHY_LSI_TYPE_KIT_COMPONENT
   #define ETHER_PHY_LSI_TYPE_KIT_COMPONENT ETHER_PHY_LSI_TYPE_DEFAULT
 #endif
