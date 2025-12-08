@@ -139,8 +139,8 @@ void ether_thread_entry(void *pvParameters) {
 
   uart_print("=== Ethernet Thread Started ===\r\n");
   /* Initialize DS1307 RTC */
-  i2c_comms_init(&g_comms_i2c_device_rtc_cfg);
-  i2c_scan_bus1();
+  // i2c_comms_init(&g_comms_i2c_device_rtc_cfg);
+  // i2c_scan_bus1();
   err = ds1307_init();
   snprintf(uart_msg, sizeof(uart_msg), "[ETHER] DS1307 Init: %s\r\n",
            (err == FSP_SUCCESS ? "OK" : "ERR"));
@@ -160,15 +160,15 @@ void ether_thread_entry(void *pvParameters) {
   ds1307_set_time(&init_time);
   uart_print("[ETHER] RTC time initialized\r\n");
 
-  R_BSP_PinAccessEnable();
+  // R_BSP_PinAccessEnable();
 
-  R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_LOW);
-  R_BSP_SoftwareDelay(50, BSP_DELAY_UNITS_MILLISECONDS);
-  R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_HIGH);
+  // R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_LOW);
+  // R_BSP_SoftwareDelay(50, BSP_DELAY_UNITS_MILLISECONDS);
+  // R_BSP_PinWrite(BSP_IO_PORT_02_PIN_10, BSP_IO_LEVEL_HIGH);
 
-  R_BSP_PinAccessDisable();
-  R_BSP_SoftwareDelay(500, BSP_DELAY_UNITS_MILLISECONDS);
-  uart_print("[PHY] Reset done. Starting IP Stack...\r\n");
+  // R_BSP_PinAccessDisable();
+  // R_BSP_SoftwareDelay(500, BSP_DELAY_UNITS_MILLISECONDS);
+  // uart_print("[PHY] Reset done. Starting IP Stack...\r\n");
   const uint8_t ucIPAddress[4] = {configIP_ADDR0, configIP_ADDR1,
                                   configIP_ADDR2, configIP_ADDR3};
   const uint8_t ucNetMask[4] = {255, 255, 255, 0};
