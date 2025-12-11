@@ -104,8 +104,8 @@
         </peripheral>
         <peripheral name="IIC0.CM33" group="IIC" security="s"/>
         <peripheral name="SCI3.CM33" group="SCI" security="s"/>
-        <peripheral name="RTC.CM33" security="s"/>
         <peripheral name="ETHERC0.CM33" group="ETHERC" security="s"/>
+        <peripheral name="IIC1.CM33" group="IIC" security="s"/>
         <peripheral name="ICU.CM33">
             <slot name="IRQ0.CM33" secure="true"/>
             <slot name="IRQ1.CM33" secure="true"/>
@@ -117,6 +117,9 @@
             <slot name="IRQ7.CM33" secure="true"/>
             <slot name="IRQ8.CM33" secure="true"/>
             <slot name="IRQ9.CM33" secure="true"/>
+            <slot name="IRQ10.CM33" secure="true"/>
+            <slot name="IRQ11.CM33" secure="true"/>
+            <slot name="IRQ12.CM33" secure="true"/>
         </peripheral>
     </partition>
 </azone>

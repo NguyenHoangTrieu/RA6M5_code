@@ -128,7 +128,7 @@ extern "C" {
  * set to 1 if a valid configuration cannot be obtained from a DHCP server for any
  * reason.  The static configuration used is that passed into the stack by the
  * FreeRTOS_IPInit() function call. */
-#define ipconfigUSE_DHCP                         1
+#define ipconfigUSE_DHCP                         0
 #define ipconfigDHCP_REGISTER_HOSTNAME           1
 #define ipconfigDHCP_USES_UNICAST                1
 
@@ -179,7 +179,7 @@ extern "C" {
  * ipconfigINCLUDE_FULL_INET_ADDR is set to 1 then both FreeRTOS_inet_addr() and
  * FreeRTOS_indet_addr_quick() are available.  If ipconfigINCLUDE_FULL_INET_ADDR is
  * not set to 1 then only FreeRTOS_indet_addr_quick() is available. */
-#define ipconfigINCLUDE_FULL_INET_ADDR            1
+#define ipconfigINCLUDE_FULL_INET_ADDR            0
 
 /* ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS defines the total number of network buffer that
  * are available to the IP stack.  The total number of network buffers is limited
@@ -286,7 +286,7 @@ extern "C" {
 /* The socket semaphore is used to unblock the MQTT task. */
 #define ipconfigSOCKET_HAS_USER_SEMAPHORE        (0)
 
-#define ipconfigSOCKET_HAS_USER_WAKE_CALLBACK    (1)
+#define ipconfigSOCKET_HAS_USER_WAKE_CALLBACK    (0)
 #define ipconfigUSE_CALLBACKS                    (0)
 
 #define ipconfigZERO_COPY_TX_DRIVER              (0)

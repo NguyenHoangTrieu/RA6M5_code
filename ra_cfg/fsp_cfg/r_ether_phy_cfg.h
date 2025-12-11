@@ -16,7 +16,7 @@
             #define ETHER_PHY_CFG_TARGET_DP83620_ENABLE             (0)
 #endif
 #ifndef ETHER_PHY_CFG_TARGET_ICS1894_ENABLE
-            #define ETHER_PHY_CFG_TARGET_ICS1894_ENABLE             (0)
+            #define ETHER_PHY_CFG_TARGET_ICS1894_ENABLE             (1)
 #endif
 #ifndef ETHER_PHY_CFG_USE_CUSTOM_PHY_LSI_ENABLE
             #define ETHER_PHY_CFG_USE_CUSTOM_PHY_LSI_ENABLE         (0)

@@ -37,26 +37,26 @@ void blinky_thread_entry(void *pvParameters) {
      * register protection is automatically handled. This code uses BSP IO
      * functions to show how it is used.
      */
-    R_BSP_PinAccessEnable();
+//     R_BSP_PinAccessEnable();
 
-#if BSP_NUMBER_OF_CORES == 1
+// #if BSP_NUMBER_OF_CORES == 1
 
-    /* Update all board LEDs */
-    for (uint32_t i = 1; i < leds.led_count; i++) {
-      /* Get pin to toggle */
-      uint32_t pin = leds.p_leds[i];
+//     /* Update all board LEDs */
+//     for (uint32_t i = 1; i < leds.led_count; i++) {
+//       /* Get pin to toggle */
+//       uint32_t pin = leds.p_leds[i];
 
-      /* Write to this pin */
-      R_BSP_PinWrite((bsp_io_port_pin_t)pin, pin_level);
-    }
-#else
+//       /* Write to this pin */
+//       R_BSP_PinWrite((bsp_io_port_pin_t)pin, pin_level);
+//     }
+// #else
 
-    /* Update LED that is at the index of this core. */
-    R_BSP_PinWrite((bsp_io_port_pin_t)leds.p_leds[_RA_CORE], pin_level);
-#endif
+//     /* Update LED that is at the index of this core. */
+//     R_BSP_PinWrite((bsp_io_port_pin_t)leds.p_leds[_RA_CORE], pin_level);
+// #endif
 
-    /* Protect PFS registers */
-    R_BSP_PinAccessDisable();
+//     /* Protect PFS registers */
+//     R_BSP_PinAccessDisable();
 
     /* Toggle level for next write */
     if (BSP_IO_LEVEL_LOW == pin_level) {

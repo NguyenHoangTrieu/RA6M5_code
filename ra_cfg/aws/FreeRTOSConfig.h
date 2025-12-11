@@ -92,7 +92,7 @@
             #define configUSE_ALTERNATIVE_API (0U)
             #endif
             #ifndef configCHECK_FOR_STACK_OVERFLOW
-            #define configCHECK_FOR_STACK_OVERFLOW (0)
+            #define configCHECK_FOR_STACK_OVERFLOW (1)
             #endif
             #ifndef configQUEUE_REGISTRY_SIZE
             #define configQUEUE_REGISTRY_SIZE (10)
@@ -128,7 +128,7 @@
             #define configSUPPORT_DYNAMIC_ALLOCATION (1)
             #endif
             #ifndef configTOTAL_HEAP_SIZE
-            #define configTOTAL_HEAP_SIZE (2048)
+            #define configTOTAL_HEAP_SIZE (128 * 1024)
             #endif
             #ifndef configAPPLICATION_ALLOCATED_HEAP
             #define configAPPLICATION_ALLOCATED_HEAP (0)

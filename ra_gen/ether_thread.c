@@ -4,9 +4,9 @@
 #if 1
                 static StaticTask_t ether_thread_memory;
                 #if defined(__ARMCC_VERSION)           /* AC6 compiler */
-                static uint8_t ether_thread_stack[2048] BSP_PLACE_IN_SECTION(BSP_UNINIT_SECTION_PREFIX ".stack.thread") BSP_ALIGN_VARIABLE(BSP_STACK_ALIGNMENT);
+                static uint8_t ether_thread_stack[8912] BSP_PLACE_IN_SECTION(BSP_UNINIT_SECTION_PREFIX ".stack.thread") BSP_ALIGN_VARIABLE(BSP_STACK_ALIGNMENT);
                 #else
-                static uint8_t ether_thread_stack[2048] BSP_PLACE_IN_SECTION(BSP_UNINIT_SECTION_PREFIX ".stack.ether_thread") BSP_ALIGN_VARIABLE(BSP_STACK_ALIGNMENT);
+                static uint8_t ether_thread_stack[8912] BSP_PLACE_IN_SECTION(BSP_UNINIT_SECTION_PREFIX ".stack.ether_thread") BSP_ALIGN_VARIABLE(BSP_STACK_ALIGNMENT);
                 #endif
                 #endif
                 TaskHandle_t ether_thread;
@@ -14,47 +14,35 @@
                 static void ether_thread_func(void * pvParameters);
                 void rtos_startup_err_callback(void * p_instance, void * p_data);
                 void rtos_startup_common_init(void);
-rtc_instance_ctrl_t g_rtc0_ctrl;
-const rtc_error_adjustment_cfg_t g_rtc0_err_cfg =
+/* I2C Communication Device */
+rm_comms_i2c_instance_ctrl_t g_comms_i2c_device_rtc_ctrl;
+
+/* Lower level driver configuration */
+const i2c_master_cfg_t g_comms_i2c_device_rtc_lower_level_cfg =
 {
-    .adjustment_mode         = RTC_ERROR_ADJUSTMENT_MODE_AUTOMATIC,
-    .adjustment_period       = RTC_ERROR_ADJUSTMENT_PERIOD_10_SECOND,
-    .adjustment_type         = RTC_ERROR_ADJUSTMENT_NONE,
-    .adjustment_value        = 0,
+    .slave = 0x68,
+    .addr_mode = I2C_MASTER_ADDR_MODE_7BIT,
+    .p_callback = rm_comms_i2c_callback,
 };
-const rtc_cfg_t g_rtc0_cfg =
+
+const rm_comms_cfg_t g_comms_i2c_device_rtc_cfg =
 {
-    .clock_source            = RTC_CLOCK_SOURCE_LOCO,
-    .freq_compare_value = 255,
-    .p_err_cfg               = &g_rtc0_err_cfg,
-    .p_callback              = NULL,
-    .p_context               = NULL,
-    .p_extend                = NULL,
-    .alarm_ipl               = (BSP_IRQ_DISABLED),
-    .periodic_ipl            = (BSP_IRQ_DISABLED),
-    .carry_ipl               = (12),
-#if defined(VECTOR_NUMBER_RTC_ALARM)
-    .alarm_irq               = VECTOR_NUMBER_RTC_ALARM,
+    .semaphore_timeout  = 500,
+    .p_lower_level_cfg  = (void*)&g_comms_i2c_device_rtc_lower_level_cfg,
+    .p_extend           = (void*)&g_comms_i2c_bus1_extended_cfg,
+    .p_callback         = comms_i2c_callback,
+#if defined(NULL)
+    .p_context          = NULL,
 #else
-    .alarm_irq               = FSP_INVALID_VECTOR,
-#endif
-#if defined(VECTOR_NUMBER_RTC_PERIOD)
-    .periodic_irq            = VECTOR_NUMBER_RTC_PERIOD,
-#else
-    .periodic_irq            = FSP_INVALID_VECTOR,
-#endif
-#if defined(VECTOR_NUMBER_RTC_CARRY)
-    .carry_irq               = VECTOR_NUMBER_RTC_CARRY,
-#else
-    .carry_irq               = FSP_INVALID_VECTOR,
+    .p_context          = (void*)&NULL,
 #endif
 };
-/* Instance structure to use this module. */
-const rtc_instance_t g_rtc0 =
+
+const rm_comms_instance_t g_comms_i2c_device_rtc =
 {
-    .p_ctrl        = &g_rtc0_ctrl,
-    .p_cfg         = &g_rtc0_cfg,
-    .p_api         = &g_rtc_on_rtc
+    .p_ctrl = &g_comms_i2c_device_rtc_ctrl,
+    .p_cfg  = &g_comms_i2c_device_rtc_cfg,
+    .p_api  = &g_comms_on_comms_i2c,
 };
 extern uint32_t g_fsp_common_thread_count;
 
@@ -78,7 +66,7 @@ extern uint32_t g_fsp_common_thread_count;
                     #endif
                         ether_thread_func,
                         (const char *)"Ethernet Thread",
-                        2048/4, // In words, not bytes
+                        8912/4, // In words, not bytes
                         (void *) &ether_thread_parameters, //pvParameters
                         3,
                         #if 1
