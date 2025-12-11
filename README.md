@@ -22,3 +22,258 @@ Example:
 ```cd "C:/embedded/Renesas_Workspace/Test_Project" && code .```
 
 - Click build in VS Code status bar
+
+### Sensor Thread Flowchart
+```mermaid
+flowchart TD
+    Start([Sensor Thread Start]) --> InitUART[Initialize UART]
+    InitUART --> CreateQueue[Create Sensor Data Queue]
+    CreateQueue --> InitI2C0[Initialize I2C Bus0]
+    InitI2C0 --> ScanI2C0[Scan I2C Bus0]
+    ScanI2C0 --> InitICP[Initialize ICP10101<br/>Pressure Sensor]
+    InitICP --> ResetICP[Soft Reset ICP]
+    ResetICP --> ReadID[Read Product ID]
+    ReadID --> ReadOTP[Read OTP Calibration]
+    ReadOTP --> InitHS[Initialize HS3001<br/>Humidity Sensor]
+    InitHS --> LoopStart{Measurement Loop}
+    
+    LoopStart --> ReadICP[Read ICP10101<br/>Pressure & Temp]
+    ReadICP --> ICPSuccess{Read OK?}
+    ICPSuccess -->|Yes| PrepareICP[Prepare sensor_data<br/>icp10101]
+    ICPSuccess -->|No| Delay1
+    PrepareICP --> CheckInternet1{internet_connected?}
+    CheckInternet1 -->|Yes| SendICP[xQueueSend ICP data]
+    CheckInternet1 -->|No| Delay1
+    SendICP --> QueueFull1{Queue Full?}
+    QueueFull1 -->|Yes| WarnICP[UART: Queue full]
+    QueueFull1 -->|No| Delay1
+    WarnICP --> Delay1[vTaskDelay 100ms]
+    
+    Delay1 --> ReadHS[Read HS3001<br/>Humidity & Temp]
+    ReadHS --> HSSuccess{Read OK?}
+    HSSuccess -->|Yes| PrepareHS[Prepare sensor_data<br/>hs3001]
+    HSSuccess -->|No| BlinkLED
+    PrepareHS --> CheckInternet2{internet_connected?}
+    CheckInternet2 -->|Yes| SendHS[xQueueSend HS data]
+    CheckInternet2 -->|No| BlinkLED
+    SendHS --> QueueFull2{Queue Full?}
+    QueueFull2 -->|Yes| WarnHS[UART: Queue full]
+    QueueFull2 -->|No| BlinkLED
+    WarnHS --> BlinkLED[Blink LED]
+    
+    BlinkLED --> Delay2[vTaskDelay 1000ms]
+    Delay2 --> LoopStart
+    
+    style Start fill:#90EE90
+    style LoopStart fill:#FFD700
+    style SendICP fill:#87CEEB
+    style SendHS fill:#87CEEB
+```
+
+### Ethernet Thread Flowchart
+```mermaid
+flowchart TD
+    Start([Ethernet Thread Start]) --> InitRTC[Initialize DS1307 RTC<br/>on I2C Bus1]
+    InitRTC --> ScanI2C1[Scan I2C Bus1]
+    ScanI2C1 --> SetTime[Set RTC Initial Time]
+    SetTime --> ResetPHY[Reset Ethernet PHY<br/>GPIO Pin Toggle]
+    ResetPHY --> InitIP[FreeRTOS_IPInit<br/>Static IP Config]
+    InitIP --> WaitNet{Network Up?}
+    WaitNet -->|No| RetryNet[vTaskDelay 1s]
+    RetryNet --> WaitNet
+    WaitNet -->|Yes| CheckIP{IP != 0.0.0.0?}
+    CheckIP -->|No| WaitIP[vTaskDelay 1s]
+    WaitIP --> CheckIP
+    CheckIP -->|Yes| PrintIP[Print IP Address]
+    
+    PrintIP --> ConnLoop{Connection Loop}
+    ConnLoop --> CreateSocket[FreeRTOS_socket<br/>Create TCP Socket]
+    CreateSocket --> SocketOK{Socket Valid?}
+    SocketOK -->|No| SetFlag1[internet_connected = false]
+    SetFlag1 --> Delay5s[vTaskDelay 5s]
+    Delay5s --> ConnLoop
+    
+    SocketOK -->|Yes| SetTimeout[Set Socket Timeout 5s]
+    SetTimeout --> Connect[FreeRTOS_connect<br/>to Server]
+    Connect --> ConnSuccess{Connected?}
+    
+    ConnSuccess -->|No| ConnFailed[Print: Connection failed]
+    ConnFailed --> CloseSocket[FreeRTOS_closesocket]
+    CloseSocket --> Delay5s
+    
+    ConnSuccess -->|Yes| SetFlag2[internet_connected = true]
+    SetFlag2 --> DataLoop{Data Loop}
+    
+    DataLoop --> CheckLink{Network Up?}
+    CheckLink -->|No| LinkLost[Print: Link lost<br/>internet_connected = false]
+    LinkLost --> BreakConn[Break to reconnect]
+    BreakConn --> ConnLoop
+    
+    CheckLink -->|Yes| ReceiveQueue[xQueueReceive<br/>g_sensor_data_queue<br/>Timeout: 5s]
+    ReceiveQueue --> DataReceived{Data OK?}
+    DataReceived -->|No| CheckSocket
+    
+    DataReceived -->|Yes| ReadRTC[ds1307_get_time<br/>current_time]
+    ReadRTC --> RTCSuccess{RTC OK?}
+    RTCSuccess -->|No| CheckSocket
+    RTCSuccess -->|Yes| FormatMsg[format_sensor_message<br/>with Timestamp]
+    FormatMsg --> PrintUART[Print to UART]
+    PrintUART --> SendTCP[FreeRTOS_send<br/>TCP Socket]
+    SendTCP --> SendOK{Send OK?}
+    SendOK -->|No| SendErr[Print: Send failed]
+    SendErr --> BreakConn
+    SendOK -->|Yes| PrintSent[Print: Sent bytes]
+    
+    PrintSent --> CheckSocket{Socket Connected?}
+    CheckSocket -->|No| SocketDisc[Print: Socket disconnected]
+    SocketDisc --> BreakConn
+    CheckSocket -->|Yes| DataLoop
+    
+    style Start fill:#90EE90
+    style ConnLoop fill:#FFD700
+    style DataLoop fill:#FFD700
+    style SendTCP fill:#87CEEB
+    style ReceiveQueue fill:#FFA07A
+```
+
+### Sequence Diagram: Inter-Task Communication (Sensor Thread ↔ Ethernet Thread)
+```mermaid
+sequenceDiagram
+    participant ST as Sensor Thread
+    participant Q as g_sensor_data_queue<br/>(FreeRTOS Queue)
+    participant ET as Ethernet Thread
+    participant UART as UART Debug
+    
+    Note over ST: Initialization Phase
+    ST->>Q: sensor_queue_create()<br/>Create Queue (length=20)
+    ST->>ST: Init ICP10101 & HS3001 Sensors
+    
+    Note over ET: Initialization Phase
+    ET->>ET: Init RTC, Network, TCP
+    ET->>ET: internet_connected = false
+    
+    Note over ST,ET: === Measurement Loop ===
+    
+    loop Every ~1.1 seconds
+        ST->>ST: Read ICP10101<br/>(Pressure, Temp)
+        
+        alt internet_connected == true
+            ST->>Q: xQueueSend(icp10101_data, 100ms timeout)
+            alt Queue Full
+                ST->>UART: "WARN: Queue full, data dropped"
+            else Queue OK
+                Q-->>ST: pdPASS
+            end
+        else internet_connected == false
+            ST->>ST: Skip sending (no connection)
+        end
+        
+        ST->>ST: vTaskDelay(100ms)
+        
+        ST->>ST: Read HS3001<br/>(Humidity, Temp)
+        
+        alt internet_connected == true
+            ST->>Q: xQueueSend(hs3001_data, 100ms timeout)
+            alt Queue Full
+                ST->>UART: "WARN: Queue full, data dropped"
+            else Queue OK
+                Q-->>ST: pdPASS
+            end
+        else internet_connected == false
+            ST->>ST: Skip sending (no connection)
+        end
+        
+        ST->>ST: Blink LED
+        ST->>ST: vTaskDelay(1000ms)
+    end
+```
+
+```mermaid
+sequenceDiagram
+    participant ET as Ethernet Thread
+    participant Stack as FreeRTOS+TCP Stack
+    participant PHY as Ethernet PHY
+    participant Server as TCP Server<br/>(192.168.1.9:8888)
+    participant Q as g_sensor_data_queue
+    participant RTC as DS1307 RTC
+    participant UART as UART Debug
+    
+    Note over ET: Initialization
+    ET->>RTC: i2c_comms_init()<br/>ds1307_init()
+    RTC-->>ET: FSP_SUCCESS
+    ET->>PHY: Reset PHY (GPIO Toggle)
+    ET->>Stack: FreeRTOS_IPInit()<br/>IP: 192.168.1.150
+    
+    loop Wait for Network
+        ET->>Stack: FreeRTOS_IsNetworkUp()
+        Stack-->>ET: pdFALSE
+        ET->>ET: vTaskDelay(1s)
+    end
+    
+    Stack-->>ET: Network UP
+    ET->>Stack: FreeRTOS_GetIPAddress()
+    Stack-->>ET: 192.168.1.150
+    ET->>UART: Print: Network UP
+    
+    Note over ET,Server: === Connection Loop ===
+    
+    loop Connection Attempts
+        ET->>Stack: FreeRTOS_socket()<br/>SOCK_STREAM
+        Stack-->>ET: xSocket (valid handle)
+        ET->>Stack: FreeRTOS_setsockopt()<br/>RCVTIMEO = 5s
+        
+        ET->>Stack: FreeRTOS_connect(xSocket,<br/>192.168.1.9:8888)
+        Stack->>Server: TCP SYN
+        Server->>Stack: TCP SYN-ACK
+        Stack->>Server: TCP ACK
+        Stack-->>ET: xStatus = 0 (Success)
+        
+        ET->>ET: internet_connected = true
+        ET->>UART: "Connected to server!"
+        
+        Note over ET,Server: === Data Transmission Loop ===
+        
+        loop While Connected
+            ET->>Stack: FreeRTOS_IsNetworkUp()
+            Stack-->>ET: pdTRUE
+            
+            ET->>Q: xQueueReceive(sensor_data,<br/>timeout=5s)
+            
+            alt Data Available
+                Q-->>ET: sensor_data (pdPASS)
+                ET->>RTC: ds1307_get_time()
+                RTC-->>ET: current_time (timestamp)
+                
+                ET->>ET: format_sensor_message()<br/>"[2025-08-21 14:30:00]<br/>dev=ck-ra6m5-01<br/>sensor=icp10101<br/>pressure=101325.0Pa<br/>temp=25C"
+                
+                ET->>UART: Print formatted message
+                ET->>Stack: FreeRTOS_send(xSocket,<br/>msg_buffer, msg_len)
+                Stack->>Server: TCP Data Packet
+                Server->>Stack: TCP ACK
+                Stack-->>ET: sent = msg_len bytes
+                ET->>UART: "Sent XX bytes"
+                
+            else Queue Timeout
+                ET->>ET: Continue waiting
+            end
+            
+            ET->>Stack: FreeRTOS_issocketconnected()
+            
+            alt Socket Disconnected
+                Stack-->>ET: pdFALSE
+                ET->>UART: "Socket disconnected"
+                ET->>ET: Break loop
+            else Socket OK
+                Stack-->>ET: pdTRUE
+            end
+        end
+        
+        Note over ET,Server: === Reconnection ===
+        ET->>ET: internet_connected = false
+        ET->>Stack: FreeRTOS_closesocket(xSocket)
+        Stack->>Server: TCP FIN
+        Server->>Stack: TCP ACK
+        ET->>UART: "Socket closed, retrying in 5s"
+        ET->>ET: vTaskDelay(5s)
+    end
+```
