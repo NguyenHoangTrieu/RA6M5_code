@@ -187,7 +187,7 @@ sequenceDiagram
         ST->>ST: vTaskDelay(1000ms)
     end
 ```
-
+### Sequence Diagram: TCP Client Communication (Ethernet Thread ↔ TCP Server)
 ```mermaid
 sequenceDiagram
     participant ET as Ethernet Thread
